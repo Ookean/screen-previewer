@@ -44,3 +44,20 @@ python screen_preview.py --list      # list monitors and exit
 Open source — free to use, modify, and share. See the
 [MIT License](https://opensource.org/license/mit/) for terms.
  
+
+# Code Signing Policy
+ 
+Free code signing for Windows builds of Screen Preview Tool is provided by
+[SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+ 
+
+To verify authenticity: right-click the downloaded `.exe` → **Properties** →
+**Digital Signatures** tab. The signer should be **"SignPath Foundation"**.
+ 
+## Build integrity
+ 
+Signing requests are submitted directly from the CI build of the public
+source repository. SignPath verifies the artifact was built from that
+repository before applying the signature — the private signing key never
+touches this project's build machine.
+ 
