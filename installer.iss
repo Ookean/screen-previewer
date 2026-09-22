@@ -5,7 +5,7 @@
 
 #define MyAppName "Screen Preview"
 #define MyAppVersion "1.0.0"
-#define MyAppPublisher "YourName"
+#define MyAppPublisher "OokeanDevelopments"
 #define MyAppExeName "screen_preview.exe"
 
 [Setup]
