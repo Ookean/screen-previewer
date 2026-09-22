@@ -25,7 +25,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mss pillow pyinstaller
+          pip install mss pillow pyinstaller pygetwindow pywin32
 
       - name: Build executable
         run: |
