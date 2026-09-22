@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenPreview — Downloads</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#161923;
+    --line:#272b38;
+    --text:#e7e9f0;
+    --muted:#8a90a3;
+    --accent:#5eead4;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:64px 24px 80px;
+  }
+  h1{
+    font-size:1.9rem;
+    font-weight:650;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+  }
+  .sub{
+    color:var(--muted);
+    margin:0 0 40px;
+    font-size:0.98rem;
+  }
+  .latest{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:28px;
+    margin-bottom:36px;
+  }
+  .latest .tag{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--accent);
+    margin-bottom:10px;
+  }
+  .latest h2{
+    margin:0 0 4px;
+    font-size:1.3rem;
+    font-weight:600;
+  }
+  .latest .date{
+    color:var(--muted);
+    font-size:0.9rem;
+    margin-bottom:20px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--accent);
+    color:#08201c;
+    font-weight:600;
+    text-decoration:none;
+    padding:11px 20px;
+    border-radius:7px;
+    font-size:0.95rem;
+  }
+  .btn:hover{ filter:brightness(1.05); }
+  .meta{
+    margin-top:18px;
+    font-family:var(--mono);
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+  .meta div{ margin-bottom:4px; word-break:break-all; }
+  .meta span{ color:var(--text); }
+  h3.section{
+    font-size:0.85rem;
+    text-transform:none;
+    color:var(--muted);
+    font-weight:600;
+    margin:0 0 14px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+  }
+  .release-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:13px 0;
+    border-bottom:1px solid var(--line);
+    gap:16px;
+  }
+  .release-row:last-child{ border-bottom:none; }
+  .release-row .v{
+    font-family:var(--mono);
+    font-size:0.92rem;
+  }
+  .release-row .d{
+    color:var(--muted);
+    font-size:0.85rem;
+    flex:1;
+    text-align:right;
+    margin-right:16px;
+  }
+  .release-row a{
+    color:var(--accent);
+    font-size:0.85rem;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .release-row a:hover{ text-decoration:underline; }
+  footer{
+    margin-top:48px;
+    color:var(--muted);
+    font-size:0.82rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>ScreenPreview for Windows</h1>
+
+  <div class="latest" id="latest"></div>
+
+  <h3 class="section">Previous releases</h3>
+  <div id="history"></div>
+
+  <footer>
+    Verify integrity by comparing the published SHA-256 against your downloaded file.
+  </footer>
+</div>
+
+<script>
+const releases = [
+  {
+    version: "1.1.0",
+    date: "2026-09-22",
+    file: "ScreenPreviewSetup.exe",
+    size: "20.3 MB",
+    sha256: "sha256:92c4a2a9c6606b8531a219d4b26a00b4b5b9afce753dd5264cde1819115845bc"
+  }
+];
+
+const latest = releases[0];
+document.getElementById('latest').innerHTML = `
+  <div class="tag">LATEST</div>
+  <h2>Version ${latest.version}</h2>
+  <div class="date">Released ${latest.date}</div>
+  <a class="btn" href="${latest.file}" download>Download for Windows</a>
+  <div class="meta">
+    <div>File: <span>${latest.file}</span></div>
+    <div>SHA-256: <span>${latest.sha256}</span></div>
+  </div>
+`;
+
+const older = releases.slice(1);
+document.getElementById('history').innerHTML = older.length
+  ? older.map(r => `
+    <div class="release-row">
+      <span class="v">${r.version}</span>
+      <span class="d">${r.date}</span>
+      <a href="${r.file}" download>Download</a>
+    </div>
+  `).join('')
+  : `<div class="release-row"><span class="d" style="text-align:left;">No earlier releases yet.</span></div>`;
+</script>
+
+</body>
+</html>
