@@ -1,31 +1,3 @@
-# Save this file as: .github/workflows/build-exe.yml
-# (in your repo, create the folders .github/workflows/ if they don't exist yet,
-#  and put screen_preview.py and installer.iss in the repo root - or adjust paths below)
-#
-# This workflow:
-#   1. Builds a standalone Windows .exe from screen_preview.py using PyInstaller
-#   2. Packages that .exe into a proper Windows installer (ScreenPreview-Setup-X.X.X.exe)
-#      using Inno Setup, which adds Start Menu shortcuts, an uninstaller, and shows
-#      up correctly in "Add or Remove Programs"
-#   3. Uploads both as downloadable build artifacts, and attaches the installer to
-#      a GitHub Release when you push a version tag like "v1.0.0"
-#
-# NOTE ON WINDOWS SMARTSCREEN:
-# Packaging as an installer makes this behave like a normal app (Start Menu entry,
-# uninstaller, etc.) but it will NOT by itself remove the "Windows protected your PC"
-# SmartScreen prompt on first run. That warning goes away once you either:
-#   (a) sign the installer with a code-signing certificate (recommended - see the
-#       commented-out signing step below), or
-#   (b) build up enough anonymous download reputation over time, or
-#   (c) submit the specific build to Microsoft for a false-positive review at
-#       https://www.microsoft.com/en-us/wdsi/filesubmission
-#
-# How to get the installer after pushing:
-#   1. Go to your repo on GitHub -> "Actions" tab
-#   2. Click the latest workflow run
-#   3. Scroll down to "Artifacts" and download "screen-preview-installer"
-#   4. Unzip it - inside you'll find ScreenPreview-Setup-1.0.0.exe
-
 name: Build Windows Executable and Installer
 on:
   push:
@@ -57,7 +29,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --windowed --name screen_preview screen_preview.py
+          pyinstaller --onefile --windowed --name screen_preview screen_preview.py --icon=icon.ico
 
       - name: Upload raw exe artifact
         uses: actions/upload-artifact@v4
@@ -74,24 +46,6 @@ jobs:
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
         shell: pwsh
-
-      # --- OPTIONAL: code signing (uncomment once you have a certificate) ---
-      # Store your .pfx certificate as a base64 secret named CERT_PFX_BASE64,
-      # and its password as CERT_PASSWORD, in repo Settings -> Secrets -> Actions.
-      #
-      # - name: Decode certificate
-      #   shell: pwsh
-      #   run: |
-      #     $bytes = [Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
-      #     [IO.File]::WriteAllBytes("cert.pfx", $bytes)
-      #
-      # - name: Sign installer
-      #   shell: pwsh
-      #   run: |
-      #     $signtool = (Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits" -Recurse -Filter signtool.exe |
-      #       Where-Object { $_.FullName -match "x64" } | Select-Object -First 1).FullName
-      #     & $signtool sign /f cert.pfx /p "${{ secrets.CERT_PASSWORD }}" /fd SHA256 `
-      #       /tr http://timestamp.digicert.com /td SHA256 installer_output\ScreenPreview-Setup-1.0.0.exe
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4

@@ -1,15 +1,15 @@
 ; installer.iss
-; Inno Setup script for Screen Preview Tool
+; Inno 1up script for Screen Preview Tool
 ; Download Inno Setup (for local testing) from https://jrsoftware.org/isdl.php
 ; In CI this is compiled headlessly by the ISCC.exe compiler - see the workflow file.
 
-#define MyAppName "Screen Preview"
-#define MyAppVersion "1.0.0"
+#define MyAppName "Screen Previewer"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "OokeanDevelopments"
 #define MyAppExeName "screen_preview.exe"
 
 [Setup]
-AppId={{B6A2B1D4-7B0E-4C4E-9F0A-6D1C8E9F2A11}
+AppId={{b73e6b8a-389e-4f26-9566-7de0221f8414}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
@@ -39,6 +39,7 @@ MinVersion=10.0
 ; admin rights is a slightly smaller ask for a cautious user.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline dialog
+SetupIconFile=icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
