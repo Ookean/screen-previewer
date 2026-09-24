@@ -2,4 +2,3 @@ mss
 pillow
 pygetwindow
 pywin32
- 
