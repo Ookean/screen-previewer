@@ -40,9 +40,53 @@ try:
 except ImportError:
     HAVE_PYGETWINDOW = False
 
+import os
+import webbrowser
 import tkinter as tk
 from tkinter import ttk
+from tkinter.scrolledtext import ScrolledText
 
+
+APP_NAME = "Screen Preview"
+APP_VERSION = "dev"   # stamped by CI on release tags
+REPO_URL = "https://github.com/Ookean/screen-previewer"  
+
+
+def resource_path(name):
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, name)
+
+
+def show_about(parent):
+    win = tk.Toplevel(parent)
+    win.title(f"About {APP_NAME}")
+    win.geometry("640x460")
+    win.transient(parent)
+
+    tabs = ttk.Notebook(win)
+    tabs.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+
+    # About tab
+    about = tk.Frame(tabs)
+    tabs.add(about, text="About")
+    tk.Label(about, text=APP_NAME, font=("Segoe UI", 16, "bold")).pack(pady=(24, 2))
+    tk.Label(about, text=f"Version {APP_VERSION}").pack()
+    tk.Label(about, text="Live monitor preview and window mover.").pack(pady=(12, 12))
+    tk.Button(about, text="Report an issue / view source",
+              command=lambda: webbrowser.open(f"{REPO_URL}/issues")).pack()
+
+    # Licenses tab
+    lic = tk.Frame(tabs)
+    tabs.add(lic, text="Third-party licenses")
+    box = ScrolledText(lic, wrap=tk.WORD, font=("Consolas", 9))
+    box.pack(fill=tk.BOTH, expand=True)
+    try:
+        with open(resource_path("THIRD_PARTY_LICENSES.txt"), encoding="utf-8") as f:
+            box.insert("1.0", f.read())
+    except OSError:
+        box.insert("1.0", "License file not found. Run tools/gen_licenses.py "
+                          "to generate THIRD_PARTY_LICENSES.txt.")
+    box.configure(state="disabled")
 
 def list_monitors():
     with mss.mss() as sct:
@@ -76,6 +120,14 @@ class ScreenPreviewApp:
     def __init__(self, root, initial_monitor_index=None):
         self.root = root
         self.sct = mss.mss()
+
+        menubar = tk.Menu(root)
+        helpmenu = tk.Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="About / Licenses", command=lambda: show_about(root))
+        helpmenu.add_command(label="Report an issue",
+                             command=lambda: webbrowser.open(f"{REPO_URL}/issues"))
+        menubar.add_cascade(label="Help", menu=helpmenu)
+        root.config(menu=menubar)
         self.tk_img = None
 
         self.root.title("Monitor Preview")
