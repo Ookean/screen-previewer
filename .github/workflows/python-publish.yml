@@ -2,7 +2,7 @@ name: Build Windows Executable and Installer
 on:
   push:
     branches: [ main ]
-  paths:
+    paths:
       - 'screen_preview.py'
       - 'installer.iss'
       - 'requirements.txt'
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --windowed --name screen_preview screen_preview.py --icon=icon.ico --add-data "THIRD_PARTY_LICENSES.txt;."
+          pyinstaller --onefile --windowed --name screen_preview screen_preview.py --icon=icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Upload raw exe artifact
         uses: actions/upload-artifact@v4

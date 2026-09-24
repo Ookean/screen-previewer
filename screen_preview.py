@@ -50,11 +50,24 @@ from tkinter.scrolledtext import ScrolledText
 APP_NAME = "Screen Preview"
 APP_VERSION = "dev"   # stamped by CI on release tags
 REPO_URL = "https://github.com/Ookean/screen-previewer"  
-
+PRIVACY_URL = f"{REPO_URL}/blob/main/PRIVACY.md"
 
 def resource_path(name):
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, name)
+
+
+def add_text_tab(tabs, title, filename, missing_msg):
+    frame = tk.Frame(tabs)
+    tabs.add(frame, text=title)
+    box = ScrolledText(frame, wrap=tk.WORD, font=("Consolas", 9))
+    box.pack(fill=tk.BOTH, expand=True)
+    try:
+        with open(resource_path(filename), encoding="utf-8") as f:
+            box.insert("1.0", f.read())
+    except OSError:
+        box.insert("1.0", missing_msg)
+    box.configure(state="disabled")
 
 
 def show_about(parent):
@@ -66,28 +79,20 @@ def show_about(parent):
     tabs = ttk.Notebook(win)
     tabs.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
 
-    # About tab
     about = tk.Frame(tabs)
     tabs.add(about, text="About")
     tk.Label(about, text=APP_NAME, font=("Segoe UI", 16, "bold")).pack(pady=(24, 2))
     tk.Label(about, text=f"Version {APP_VERSION}").pack()
-    tk.Label(about, text="Live monitor preview and window mover.").pack(pady=(12, 12))
-    tk.Button(about, text="Report an issue / view source",
-              command=lambda: webbrowser.open(f"{REPO_URL}/issues")).pack()
+    tk.Label(about, text="Live monitor preview and window mover.").pack(pady=12)
+    tk.Button(about, text="Report an issue",
+              command=lambda: webbrowser.open(f"{REPO_URL}/issues")).pack(pady=2)
+    tk.Button(about, text="Privacy policy (online)",
+              command=lambda: webbrowser.open(PRIVACY_URL)).pack(pady=2)
 
-    # Licenses tab
-    lic = tk.Frame(tabs)
-    tabs.add(lic, text="Third-party licenses")
-    box = ScrolledText(lic, wrap=tk.WORD, font=("Consolas", 9))
-    box.pack(fill=tk.BOTH, expand=True)
-    try:
-        with open(resource_path("THIRD_PARTY_LICENSES.txt"), encoding="utf-8") as f:
-            box.insert("1.0", f.read())
-    except OSError:
-        box.insert("1.0", "License file not found. Run tools/gen_licenses.py "
-                          "to generate THIRD_PARTY_LICENSES.txt.")
-    box.configure(state="disabled")
-
+    add_text_tab(tabs, "Privacy", "PRIVACY.md",
+                 "PRIVACY.md not found in this build.")
+    add_text_tab(tabs, "Third-party licenses", "THIRD_PARTY_LICENSES.txt",
+                 "License file not found. Run tools/gen_licenses.py to generate it.")
 def list_monitors():
     with mss.mss() as sct:
         monitors = sct.monitors
