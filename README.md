@@ -8,8 +8,7 @@ Useful when a monitor is set to "Extend" and you can't see it directly
 ## Requirements
  
 - Python 3.8+
-- Dependencies: `mss`, `pillow`, `pygetwindow`, `pywin32`
-  (`pygetwindow`/`pywin32` are only needed for the window-moving feature, Windows-only)
+- Dependencies: See [requirements.txt](https://github.com/Ookean/screen-previewer/blob/main/requirements.txt)
 ## Quick install (regular pip installer)
  
 If you just want to run the tool:
@@ -43,3 +42,10 @@ python screen_preview.py --list      # list monitors and exit
  
 Open source — free to use, modify, and share. See the
 [MIT License](https://opensource.org/license/mit/) for terms.
+
+
+## Support
+
+If Screen Preview is useful to you, you can support me on Ko-fi. This is completly optional.
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ookean)
