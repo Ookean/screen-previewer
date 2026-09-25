@@ -43,9 +43,3 @@ python screen_preview.py --list      # list monitors and exit
 Open source — free to use, modify, and share. See the
 [MIT License](https://opensource.org/license/mit/) for terms.
 
-
-## Support
-
-If Screen Preview is useful to you, you can support me on Ko-fi. This is completly optional.
-
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ookean)
