@@ -7,7 +7,7 @@ Useful when a monitor is set to "Extend" and you can't see it directly
  
 ## Requirements
  
-- Python 3.8+
+- Python 3.11+
 - Dependencies: See [requirements.txt](https://github.com/Ookean/screen-previewer/blob/main/requirements.txt)
 ## Quick install (regular pip installer)
  
