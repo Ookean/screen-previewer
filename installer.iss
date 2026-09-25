@@ -4,7 +4,7 @@
 ; In CI this is compiled headlessly by the ISCC.exe compiler - see the workflow file.
 
 #define MyAppName "Screen Previewer"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.3.0"
 #define MyAppPublisher "OokeanDevelopments"
 #define MyAppExeName "screen_preview.exe"
 
@@ -48,8 +48,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Files]
-; This expects the PyInstaller build to already be in dist\screen_preview.exe
-Source: "dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\screen_preview\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
