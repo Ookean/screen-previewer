@@ -1,4 +1,4 @@
-name: Build Windows Executable and Installer
+name: Build Windows Executable, Installer and MSIX
 on:
   push:
     branches: [ main ]
@@ -6,24 +6,32 @@ on:
       - 'screen_preview.py'
       - 'installer.iss'
       - 'requirements.txt'
+      - 'requirements-build.txt'
       - 'tools/gen_licenses.py'
+      - 'tools/licenses/**'
+      - 'msix/**'
+      - 'PRIVACY.md'
       - '.github/workflows/build-exe.yml'
     tags:
       - 'v*'
-  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+  workflow_dispatch: {}
 
 permissions:
-  contents: write   # needed for checkout + creating the GitHub Release
+  contents: read
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -35,28 +43,39 @@ jobs:
       - name: Generate third-party license file
         run: python tools/gen_licenses.py
 
-      - name: Stamp version (tags only)
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') { $v = $env:GITHUB_REF_NAME.TrimStart('v') }
+          else { $v = "0.0.$($env:GITHUB_RUN_NUMBER)" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Stamp version in source (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
-          $v = $env:GITHUB_REF_NAME.TrimStart('v')
-          (Get-Content screen_preview.py) -replace 'APP_VERSION = ".*"', "APP_VERSION = `"$v`"" |
+          (Get-Content screen_preview.py) -replace 'APP_VERSION = ".*"', "APP_VERSION = `"${{ steps.version.outputs.version }}`"" |
             Set-Content screen_preview.py
 
-      - name: Build executable
+      - name: Build executable (onedir)
         run: |
           pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
-      - name: Upload raw exe artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: screen-preview-exe
-          path: dist/screen_preview.exe
+      - name: Zip portable build
+        shell: pwsh
+        run: Compress-Archive -Path dist\screen_preview\* -DestinationPath dist\screen_preview_portable.zip
 
-      # --- Installer packaging ---
+      - name: Upload raw build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-preview-portable
+          path: dist/screen_preview_portable.zip
+
+      # --- Inno Setup installer ---
 
       - name: Install Inno Setup
-        run: choco install innosetup -y
+        run: choco install innosetup -y --version 6.3.3
 
       - name: Compile installer
         run: |
@@ -64,17 +83,81 @@ jobs:
         shell: pwsh
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: screen-preview-installer
           path: installer_output/*.exe
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v3
+      # --- MSIX package ---
+
+      - name: Build MSIX package
+        shell: pwsh
+        env:
+          IDENTITY_NAME: ${{ secrets.MSIX_IDENTITY_NAME }}
+          PUBLISHER: ${{ secrets.MSIX_PUBLISHER }}
+          PUBLISHER_DISPLAY: ${{ secrets.MSIX_PUBLISHER_DISPLAY }}
+        run: |
+          $v = "${{ steps.version.outputs.version }}.0"   # Store requires a 4th version part
+
+          New-Item -ItemType Directory -Force msix_pkg\Assets | Out-Null
+
+          # Copy the WHOLE onedir output (exe + all its DLLs/_internal), not just the exe
+          Copy-Item dist\screen_preview\* msix_pkg\ -Recurse -Force
+
+          # Generate required logo sizes from icon.ico
+          python -c "from PIL import Image; im=Image.open('icon.ico').convert('RGBA'); [im.resize((s,s)).save(f'msix_pkg/Assets/{n}.png') for n,s in [('StoreLogo',50),('Square44x44Logo',44),('Square150x150Logo',150)]]"
+
+          (Get-Content msix\AppxManifest.template.xml -Raw) `
+            -replace '__IDENTITY_NAME__', $env:IDENTITY_NAME `
+            -replace '__PUBLISHER__', $env:PUBLISHER `
+            -replace '__PUBLISHER_DISPLAY__', $env:PUBLISHER_DISPLAY `
+            -replace '__VERSION__', $v |
+            Set-Content msix_pkg\AppxManifest.xml -Encoding utf8
+
+          $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          New-Item -ItemType Directory -Force msix_output | Out-Null
+          & $makeappx.FullName pack /d msix_pkg /p "msix_output\screen_preview_$v.msix" /o
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: screen-preview-msix
+          path: msix_output/*.msix
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: screen-preview-installer
+          path: installer_output
+
+      - name: Download MSIX artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: screen-preview-msix
+          path: msix_output
+
+      - name: Download portable build
+        uses: actions/download-artifact@v4
+        with:
+          name: screen-preview-portable
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          generate_release_notes: true
           files: |
-            dist/screen_preview.exe
             installer_output/*.exe
+            msix_output/*.msix
+            dist/screen_preview_portable.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
