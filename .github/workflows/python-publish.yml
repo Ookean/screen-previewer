@@ -93,9 +93,9 @@ jobs:
       - name: Build MSIX package
         shell: pwsh
         env:
-          IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME }}
-          PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
-          PUBLISHER_DISPLAY: ${{ vars.MSIX_PUBLISHER_DISPLAY }}
+          IDENTITY_NAME: ${{ secrets.MSIX_IDENTITY_NAME }}
+          PUBLISHER: ${{ secrets.MSIX_PUBLISHER }}
+          PUBLISHER_DISPLAY: ${{ secrets.MSIX_PUBLISHER_DISPLAY }}
         run: |
           $v = "${{ steps.version.outputs.version }}.0"   # Store requires a 4th version part
 
