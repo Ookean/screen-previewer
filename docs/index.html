@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ScreenPreview — Downloads</title>
+<title>ScreenPreview — Download</title>
 <style>
   :root{
     --bg:#0f1115;
@@ -91,33 +91,26 @@
     border-bottom:1px solid var(--line);
     padding-bottom:10px;
   }
-  .release-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    padding:13px 0;
-    border-bottom:1px solid var(--line);
-    gap:16px;
+  .about p{
+    margin:0 0 16px;
+    font-size:0.95rem;
+    color:var(--text);
   }
-  .release-row:last-child{ border-bottom:none; }
-  .release-row .v{
-    font-family:var(--mono);
+  .use-cases{
+    list-style:none;
+    margin:0 0 8px;
+    padding:0;
+  }
+  .use-cases li{
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
     font-size:0.92rem;
   }
-  .release-row .d{
-    color:var(--muted);
-    font-size:0.85rem;
-    flex:1;
-    text-align:right;
-    margin-right:16px;
-  }
-  .release-row a{
+  .use-cases li:last-child{ border-bottom:none; }
+  .use-cases b{
     color:var(--accent);
-    font-size:0.85rem;
-    text-decoration:none;
-    white-space:nowrap;
+    font-weight:600;
   }
-  .release-row a:hover{ text-decoration:underline; }
   footer{
     margin-top:48px;
     color:var(--muted);
@@ -129,11 +122,28 @@
 <div class="wrap">
 
   <h1>ScreenPreview for Windows</h1>
+  <p class="sub">A lightweight live preview for any of your monitors, with quick window-to-monitor moving.</p>
 
   <div class="latest" id="latest"></div>
 
-  <h3 class="section">Previous releases</h3>
-  <div id="history"></div>
+  <h3 class="section">What it does</h3>
+  <div class="about">
+    <p>
+      ScreenPreview shows a live, resizable preview of any monitor connected to your PC in a
+      single small window. It's built for setups where a monitor is set to "Extend" and isn't
+      visible on your main screen, so you can see what's on it without physically looking at it
+      or switching inputs. A dropdown lets you jump between monitors, and a second dropdown lets
+      you send any open window straight to a chosen monitor, centered automatically.
+    </p>
+  </div>
+
+  <h3 class="section">Use cases</h3>
+  <ul class="use-cases">
+    <li><b>Extra display you can't see</b> — preview a monitor facing away from you, in another room, or otherwise out of view.</li>
+    <li><b>Tabletop / GM setups</b> — run a secondary "player-facing" display and confirm what it's showing without turning around.</li>
+    <li><b>Presenting or streaming</b> — check exactly what's on your presentation or capture display before switching to it.</li>
+    <li><b>Multi-monitor window wrangling</b> — quickly move a stray window onto the right monitor without dragging it across the desktop.</li>
+  </ul>
 
   <footer>
     Verify integrity by comparing the published SHA-256 against your downloaded file.
@@ -141,17 +151,14 @@
 </div>
 
 <script>
-const releases = [
-  {
-    version: "1.3.0",
-    date: "2026-09-24",
-    file: "ScreenPreviewSetup.exe",
-    size: "14 MB",
-    sha256: "sha256:2ef8287975d26d11a31a0501b04d86273add1c5260cae41c65750e0947802bbc"
-  }
-];
+const latest = {
+  version: "1.3.0",
+  date: "2026-09-25",
+  file: "ScreenPreviewSetup.exe",
+  size: "14 MB",
+  sha256: "sha256:2ef8287975d26d11a31a0501b04d86273add1c5260cae41c65750e0947802bbc"
+};
 
-const latest = releases[0];
 document.getElementById('latest').innerHTML = `
   <div class="tag">LATEST</div>
   <h2>Version ${latest.version}</h2>
@@ -162,17 +169,6 @@ document.getElementById('latest').innerHTML = `
     <div>SHA-256: <span>${latest.sha256}</span></div>
   </div>
 `;
-
-const older = releases.slice(1);
-document.getElementById('history').innerHTML = older.length
-  ? older.map(r => `
-    <div class="release-row">
-      <span class="v">${r.version}</span>
-      <span class="d">${r.date}</span>
-      <a href="${r.file}" download>Download</a>
-    </div>
-  `).join('')
-  : `<div class="release-row"><span class="d" style="text-align:left;">No earlier releases yet.</span></div>`;
 </script>
 
 </body>
