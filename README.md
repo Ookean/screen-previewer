@@ -4,6 +4,12 @@ Live preview window for one of your monitors, with dropdowns to pick which
 monitor to preview and to move any open window onto a chosen monitor.
 Useful when a monitor is set to "Extend" and you can't see it directly
 (e.g. a GM running a secondary display for players).
+
+## Download the signed binary from the ms-store directly
+
+<a href="https://get.microsoft.com/installer/download/9n3slpdcjwc6?referrer=appbadge" target="_self" >
+	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
+</a>
  
 ## Requirements
  
