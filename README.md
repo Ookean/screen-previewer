@@ -5,12 +5,7 @@ monitor to preview and to move any open window onto a chosen monitor.
 Useful when a monitor is set to "Extend" and you can't see it directly
 (e.g. a GM running a secondary display for players).
 
-## Download the signed binary from the ms-store directly
 
-<a href="https://get.microsoft.com/installer/download/9n3slpdcjwc6?referrer=appbadge" target="_self" >
-	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
-</a>
- 
 ## Requirements
  
 - Python 3.11+
@@ -48,4 +43,17 @@ python screen_preview.py --list      # list monitors and exit
  
 Open source — free to use, modify, and share. See the
 [MIT License](https://opensource.org/license/mit/) for terms.
+
+## Download
+
+<a href="https://get.microsoft.com/installer/download/9n3slpdcjwc6?referrer=appbadge" target="_self" >
+	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
+</a>
+
+
+## Support
+
+If Screen Previewer is useful to you, you can support me on Ko-fi. This is completly optional.
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ookean)
 
