@@ -72,7 +72,6 @@ jobs:
         with:
           name: screen-preview-portable
           path: dist/screen_preview_portable.zip
-
       # --- MSIX package ---
 
       - name: Build MSIX package
@@ -81,6 +80,7 @@ jobs:
           IDENTITY_NAME: ${{ secrets.MSIX_IDENTITY_NAME }}
           PUBLISHER: ${{ secrets.MSIX_PUBLISHER }}
           PUBLISHER_DISPLAY: ${{ secrets.MSIX_PUBLISHER_DISPLAY }}
+          DISPLAY_NAME: ${{ secrets.MSIX_DISPLAY_NAME }}
         run: |
           $v = "${{ steps.version.outputs.version }}.0"   # Store requires a 4th version part
 
@@ -96,6 +96,7 @@ jobs:
             -replace '__IDENTITY_NAME__', $env:IDENTITY_NAME `
             -replace '__PUBLISHER__', $env:PUBLISHER `
             -replace '__PUBLISHER_DISPLAY__', $env:PUBLISHER_DISPLAY `
+            -replace '__DISPLAY_NAME__', $env:DISPLAY_NAME `
             -replace '__VERSION__', $v |
             Set-Content msix_pkg\AppxManifest.xml -Encoding utf8
 
