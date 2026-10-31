@@ -1,149 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ScreenPreview</title>
-<style>
-  :root{
-    --bg:#0f1115;
-    --panel:#161923;
-    --line:#272b38;
-    --text:#e7e9f0;
-    --muted:#8a90a3;
-    --accent:#5eead4;
-    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    line-height:1.5;
-  }
-  .wrap{
-    max-width:720px;
-    margin:0 auto;
-    padding:64px 24px 80px;
-  }
-  h1{
-    font-size:1.9rem;
-    font-weight:650;
-    letter-spacing:-0.01em;
-    margin:0 0 6px;
-  }
-  .sub{
-    color:var(--muted);
-    margin:0 0 40px;
-    font-size:0.98rem;
-  }
-  .latest{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:28px;
-    margin-bottom:36px;
-  }
-  .latest .tag{
-    font-family:var(--mono);
-    font-size:0.78rem;
-    color:var(--accent);
-    margin-bottom:10px;
-  }
-  .latest h2{
-    margin:0 0 4px;
-    font-size:1.3rem;
-    font-weight:600;
-  }
-  .latest .date{
-    color:var(--muted);
-    font-size:0.9rem;
-    margin-bottom:20px;
-  }
-  .btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    background:var(--accent);
-    color:#08201c;
-    font-weight:600;
-    text-decoration:none;
-    padding:11px 20px;
-    border-radius:7px;
-    font-size:0.95rem;
-  }
-  .btn:hover{ filter:brightness(1.05); }
-  .meta{
-    margin-top:18px;
-    font-family:var(--mono);
-    font-size:0.82rem;
-    color:var(--muted);
-  }
-  .meta div{ margin-bottom:4px; word-break:break-all; }
-  .meta span{ color:var(--text); }
-  h3.section{
-    font-size:0.85rem;
-    text-transform:none;
-    color:var(--muted);
-    font-weight:600;
-    margin:0 0 14px;
-    border-bottom:1px solid var(--line);
-    padding-bottom:10px;
-  }
-  .about p{
-    margin:0 0 16px;
-    font-size:0.95rem;
-    color:var(--text);
-  }
-  .use-cases{
-    list-style:none;
-    margin:0 0 8px;
-    padding:0;
-  }
-  .use-cases li{
-    padding:10px 0;
-    border-bottom:1px solid var(--line);
-    font-size:0.92rem;
-  }
-  .use-cases li:last-child{ border-bottom:none; }
-  .use-cases b{
-    color:var(--accent);
-    font-weight:600;
-  }
-  footer{
-    margin-top:48px;
-    color:var(--muted);
-    font-size:0.82rem;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScreenPreview</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #161923;
+      --line: #272b38;
+      --text: #e7e9f0;
+      --muted: #8a90a3;
+      --accent: #5eead4;
+      --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      margin: 0 0 6px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0 0 40px;
+      font-size: 0.98rem;
+    }
+
+    .latest {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 36px;
+    }
+
+    .latest .tag {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .latest h2 {
+      margin: 0 0 4px;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .latest .date {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #08201c;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 11px 20px;
+      border-radius: 7px;
+      font-size: 0.95rem;
+    }
+
+    .btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .meta {
+      margin-top: 18px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .meta div {
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+
+    .meta span {
+      color: var(--text);
+    }
+
+    h3.section {
+      font-size: 0.85rem;
+      text-transform: none;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 0 0 14px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .about {
+      margin-bottom: 36px;
+    }
+
+    .about p {
+      margin: 0 0 16px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .about p:last-child {
+      margin-bottom: 0;
+    }
+
+    .use-cases {
+      list-style: none;
+      margin: 0 0 36px;
+      padding: 0;
+    }
+
+    .use-cases li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+
+    .use-cases li:last-child {
+      border-bottom: none;
+    }
+
+    .use-cases b {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: -24px 0 36px;
+    }
+
+    footer {
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
 </head>
+
 <body>
-<div class="wrap">
+  <div class="wrap">
 
-  <h1>ScreenPreview for Windows</h1>
-  <p class="sub">A lightweight live preview for any of your monitors, with quick window-to-monitor moving.</p>
+    <h1>ScreenPreview for Windows</h1>
+    <p class="sub">A lightweight live preview for any of your monitors, with window layouts and zoom for the screen you
+      can't see.</p>
 
-  <div class="latest" id="latest"></div>
+    <div class="latest" id="latest">
+      <a href="https://get.microsoft.com/installer/download/9n3slpdcjwc6?referrer=appbadge" target="_self">
+        <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" />
+      </a>
+    </div>
 
-  <h3 class="section">What it does</h3>
-  <div class="about">
-    <p>
-      ScreenPreview shows a live, resizable preview of any monitor connected to your PC in a
-      single small window. It's built for setups where a monitor is set to "Extend" and isn't
-      visible on your main screen, so you can see what's on it without physically looking at it
-      or switching inputs. A dropdown lets you jump between monitors, and a second dropdown lets
-      you send any open window straight to a chosen monitor, centered automatically.
-    </p>
+    <h3 class="section">What it does</h3>
+    <div class="about">
+      <p>
+        ScreenPreview shows a live, resizable preview of any monitor connected to your PC in a
+        single small window. It's built for setups where a monitor is set to "Extend" and isn't
+        visible on your main screen, so you can see what's on it without physically looking at it
+        or switching inputs.
+      </p>
+      <p>
+        Pick a monitor from the dropdown, pick any open window, and send it over. You can also
+        control how it lands and zoom into it, all from the same small window.
+      </p>
+    </div>
+
+    <h3 class="section">Features</h3>
+    <ul class="use-cases">
+      <li><b>Live monitor preview</b> — watch any connected display in a resizable window, and switch between monitors
+        with a dropdown.</li>
+      <li><b>Move windows between monitors</b> — send any open window to the selected monitor, centered, keeping its
+        size.</li>
+      <li><b>Window layouts</b> — choose Center, Maximize, or snap to the left, right, top or bottom half, then press
+        <i>Apply layout</i>. You can re-arrange a window that is already on the other screen.
+      </li>
+      <li><b>Zoom the shared window</b> — zoom in, zoom out or reset to 100% on the window you sent to the other screen,
+        without leaving the preview.</li>
+    </ul>
+    <p class="note">Zoom works with apps that use Ctrl + / Ctrl − to zoom, such as browsers, image viewers, PDF readers
+      and most Office apps.</p>
+
+    <h3 class="section">Built at the game table</h3>
+    <div class="about">
+      <p>
+        ScreenPreview started while playing D&amp;D. A Dungeon Master sharing a screen with the
+        players, such as a map, a handout or a monster portrait on a second display facing the
+        table, can't see that display without turning around. And once something is on it, you
+        often need to make it fill the screen or zoom in on a detail.
+      </p>
+      <p>
+        So the DM keeps the preview open on their own screen. They see exactly what the players
+        see, move the right window onto the player display, set it to full screen or half screen,
+        and zoom in on part of a map, all without leaving their seat or interrupting the game.
+      </p>
+      <p>
+        It's just as useful outside the game table, and that's why it isn't built only for D&amp;D.
+      </p>
+    </div>
+
+    <h3 class="section">Use cases</h3>
+    <ul class="use-cases">
+      <li><b>Tabletop / DM setups</b> — run a secondary player-facing display, arrange and zoom what's on it, and check
+        it without turning around.</li>
+      <li><b>Extra display you can't see</b> — preview a monitor facing away from you, in another room, or otherwise out
+        of view.</li>
+      <li><b>Presenting or streaming</b> — check exactly what's on your presentation or capture display before switching
+        to it.</li>
+      <li><b>Multi-monitor window wrangling</b> — quickly move a stray window onto the right monitor and snap it into
+        place without dragging it across the desktop.</li>
+    </ul>
+
   </div>
-
-  <h3 class="section">Use cases</h3>
-  <ul class="use-cases">
-    <li><b>Extra display you can't see</b> — preview a monitor facing away from you, in another room, or otherwise out of view.</li>
-    <li><b>Tabletop / GM setups</b> — run a secondary "player-facing" display and confirm what it's showing without turning around.</li>
-    <li><b>Presenting or streaming</b> — check exactly what's on your presentation or capture display before switching to it.</li>
-    <li><b>Multi-monitor window wrangling</b> — quickly move a stray window onto the right monitor without dragging it across the desktop.</li>
-  </ul>
-</div>
 </body>
+
 </html>
