@@ -4,7 +4,6 @@ on:
     branches: [ main ]
     paths:
       - 'screen_preview.py'
-      - 'installer.iss'
       - 'requirements.txt'
       - 'requirements-build.txt'
       - 'tools/gen_licenses.py'
@@ -72,7 +71,7 @@ jobs:
         with:
           name: screen-preview-portable
           path: dist/screen_preview_portable.zip
-      # --- MSIX package ---
+
 
       - name: Build MSIX package
         shell: pwsh
@@ -111,6 +110,7 @@ jobs:
           name: screen-preview-msix
           path: msix_output/*.msix
 
+
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
@@ -118,12 +118,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download installer artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: screen-preview-installer
-          path: installer_output
-
       - name: Download MSIX artifact
         uses: actions/download-artifact@v4
         with:
@@ -142,7 +136,6 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: true
           files: |
-            installer_output/*.exe
             msix_output/*.msix
             dist/screen_preview_portable.zip
         env:
