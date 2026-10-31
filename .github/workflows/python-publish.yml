@@ -10,6 +10,7 @@ on:
       - 'tools/gen_licenses.py'
       - 'tools/licenses/**'
       - 'msix/**'
+      - 'Assets/**'
       - 'PRIVACY.md'
       - '.github/workflows/build-exe.yml'
     tags:
@@ -60,7 +61,7 @@ jobs:
 
       - name: Build executable (onedir)
         run: |
-          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
+          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Zip portable build
         shell: pwsh
@@ -71,22 +72,6 @@ jobs:
         with:
           name: screen-preview-portable
           path: dist/screen_preview_portable.zip
-
-      # --- Inno Setup installer ---
-
-      - name: Install Inno Setup
-        run: choco install innosetup -y --version 6.3.3
-
-      - name: Compile installer
-        run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
-        shell: pwsh
-
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: screen-preview-installer
-          path: installer_output/*.exe
 
       # --- MSIX package ---
 
@@ -104,8 +89,8 @@ jobs:
           # Copy the WHOLE onedir output (exe + all its DLLs/_internal), not just the exe
           Copy-Item dist\screen_preview\* msix_pkg\ -Recurse -Force
 
-          # Generate required logo sizes from icon.ico
-          python -c "from PIL import Image; im=Image.open('icon.ico').convert('RGBA'); [im.resize((s,s)).save(f'msix_pkg/Assets/{n}.png') for n,s in [('StoreLogo',50),('Square44x44Logo',44),('Square150x150Logo',150)]]"
+          # Generate required logo sizes from Assets/icon.ico
+          python -c "from PIL import Image; im=Image.open('Assets/icon.ico').convert('RGBA'); [im.resize((s,s)).save(f'msix_pkg/Assets/{n}.png') for n,s in [('StoreLogo',50),('Square44x44Logo',44),('Square150x150Logo',150)]]"
 
           (Get-Content msix\AppxManifest.template.xml -Raw) `
             -replace '__IDENTITY_NAME__', $env:IDENTITY_NAME `
