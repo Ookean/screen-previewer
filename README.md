@@ -2,8 +2,10 @@
  
 Live preview window for one of your monitors, with dropdowns to pick which
 monitor to preview and to move any open window onto a chosen monitor.
-Useful when a monitor is set to "Extend" and you can't see it directly
+Useful when a monitor is set to "Extend" and you can't see it directly.
 (e.g. a GM running a secondary display for players).
+
+The idea for this tool originated through various dnd sessions and was created with the intend to support GMs when extending their screens to their players, allowing them to control the secondary screen easier.
 
 
 ## Requirements
@@ -27,7 +29,7 @@ This project is developed inside a virtual environment to keep dependencies isol
 python -m venv venv
 venv\Scripts\activate      # Windows
 source venv/bin/activate   # macOS/Linux
-pip install mss pillow pygetwindow pywin32
+pip install -r requirements.txt
 python screen_preview.py
 ```
  
