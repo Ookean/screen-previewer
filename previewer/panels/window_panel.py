@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .. import window_control
+from ..i18n import t
 
 
 class WindowPanel(tk.Frame):
@@ -25,39 +26,40 @@ class WindowPanel(tk.Frame):
         picker = tk.Frame(self)
         picker.pack(side=tk.TOP, fill=tk.X, pady=(0, 3))
 
-        tk.Label(picker, text="Window:").pack(side=tk.LEFT, padx=(0, 6))
+        tk.Label(picker, text=t("window.label")).pack(side=tk.LEFT, padx=(0, 6))
         self.window_var = tk.StringVar()
         self.window_combo = ttk.Combobox(picker, textvariable=self.window_var, state="readonly", width=40)
         self.window_combo.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        refresh_btn = tk.Button(picker, text="Refresh", command=self.refresh)
+        refresh_btn = tk.Button(picker, text=t("common.refresh"), command=self.refresh)
         refresh_btn.pack(side=tk.LEFT, padx=(6, 0))
-        move_btn = tk.Button(picker, text="Move to Monitor", command=self.move_to_monitor)
+        move_btn = tk.Button(picker, text=t("window.move"), command=self.move_to_monitor)
         move_btn.pack(side=tk.LEFT, padx=(6, 0))
 
         # Row 2: arrange it and zoom it
         options = tk.Frame(self)
         options.pack(side=tk.TOP, fill=tk.X)
 
-        tk.Label(options, text="Layout:").pack(side=tk.LEFT, padx=(0, 6))
-        self.layout_var = tk.StringVar(value=window_control.LAYOUTS[0])
-        layout_combo = ttk.Combobox(options, textvariable=self.layout_var, values=window_control.LAYOUTS,
-                                    state="readonly", width=14)
-        layout_combo.pack(side=tk.LEFT)
-        apply_btn = tk.Button(options, text="Apply layout", command=self.apply_layout)
+        tk.Label(options, text=t("layout.label")).pack(side=tk.LEFT, padx=(0, 6))
+        layout_labels = [t(f"layout.{layout}") for layout in window_control.LAYOUTS]
+        self.layout_combo = ttk.Combobox(options, values=layout_labels, state="readonly",
+                                         width=max(len(label) for label in layout_labels) + 1)
+        self.layout_combo.current(0)
+        self.layout_combo.pack(side=tk.LEFT)
+        apply_btn = tk.Button(options, text=t("layout.apply"), command=self.apply_layout)
         apply_btn.pack(side=tk.LEFT, padx=(6, 0))
 
-        tk.Label(options, text="Zoom:").pack(side=tk.LEFT, padx=(16, 6))
+        tk.Label(options, text=t("zoom.label")).pack(side=tk.LEFT, padx=(16, 6))
         zoom_btns = [tk.Button(options, text=text, width=4, command=lambda a=action: self.zoom(a))
                      for text, action in self.ZOOM_BUTTONS]
         for btn in zoom_btns:
             btn.pack(side=tk.LEFT, padx=(0, 4))
 
         # Without pygetwindow/pywin32 none of the controls can work.
-        self.controls = [self.window_combo, refresh_btn, move_btn, layout_combo, apply_btn, *zoom_btns]
+        self.controls = [self.window_combo, refresh_btn, move_btn, self.layout_combo, apply_btn, *zoom_btns]
         if not window_control.AVAILABLE:
             for control in self.controls:
                 control.configure(state="disabled")
-            self.window_var.set(window_control.UNAVAILABLE_MESSAGE)
+            self.window_var.set(t("window.unavailable"))
 
     def refresh(self):
         """Reload the list of open windows."""
@@ -73,7 +75,7 @@ class WindowPanel(tk.Frame):
         if self.windows:
             self.window_combo.current(0)
         else:
-            self.window_var.set("No windows found")
+            self.window_var.set(t("window.none_found"))
 
     def selected_window(self):
         idx = self.window_combo.current()
@@ -81,11 +83,11 @@ class WindowPanel(tk.Frame):
 
     def move_to_monitor(self):
         """Move the window to the selected monitor, centered, keeping its size."""
-        self._arrange("Center")
+        self._arrange("center")
 
     def apply_layout(self):
         """Arrange the window on the selected monitor using the chosen layout."""
-        self._arrange(self.layout_var.get())
+        self._arrange(window_control.LAYOUTS[max(self.layout_combo.current(), 0)])
 
     def zoom(self, action):
         window = self.selected_window()

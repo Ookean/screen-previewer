@@ -1,3 +1,4 @@
+"""Application constants and bundled-file lookup, shared by every platform."""
 import os
 import sys
 

@@ -1,3 +1,4 @@
+"""Window listing, layouts and zoom (Windows: pygetwindow + pywin32)."""
 import ctypes
 import time
 from dataclasses import dataclass
@@ -11,8 +12,8 @@ try:
 except ImportError:
     AVAILABLE = False
 
-UNAVAILABLE_MESSAGE = "pygetwindow/pywin32 not installed (pip install -r requirements.txt)"
-LAYOUTS = ["Center", "Maximize", "Left half", "Right half", "Top half", "Bottom half"]
+# Layout ids. The UI shows a translated label for each ("layout.<id>" in the locale files).
+LAYOUTS = ["center", "maximize", "left_half", "right_half", "top_half", "bottom_half"]
 ZOOM_KEYS = {"in": 0xBB, "out": 0xBD, "reset": 0x30}  # VK_OEM_PLUS, VK_OEM_MINUS, '0'
 
 
@@ -26,23 +27,23 @@ class Placement:
 
 
 def compute_placement(monitor, layout, win_width, win_height):
-    """Where a window of the given size should go on `monitor` for `layout`."""
+    """Where a window of the given size should go on `monitor` for the layout id `layout`."""
     left, top = monitor["left"], monitor["top"]
     width, height = monitor["width"], monitor["height"]
 
-    if layout == "Left half":
+    if layout == "left_half":
         return Placement(left, top, width // 2, height)
-    if layout == "Right half":
+    if layout == "right_half":
         return Placement(left + width // 2, top, width - width // 2, height)
-    if layout == "Top half":
+    if layout == "top_half":
         return Placement(left, top, width, height // 2)
-    if layout == "Bottom half":
+    if layout == "bottom_half":
         return Placement(left, top + height // 2, width, height - height // 2)
 
-    # "Center" and "Maximize": move first, so a maximize happens on the target monitor.
+    # "center" and "maximize": move first, so a maximize happens on the target monitor.
     x = left + max(0, (width - win_width) // 2)
     y = top + max(0, (height - win_height) // 2)
-    return Placement(x, y, maximize=(layout == "Maximize"))
+    return Placement(x, y, maximize=(layout == "maximize"))
 
 
 def enable_dpi_awareness():
@@ -58,8 +59,8 @@ def list_windows():
             if w.title.strip() and w.visible and w.width > 0 and w.height > 0]
 
 
-def arrange(window, monitor, layout="Center"):
-    """Move a window onto a monitor and arrange it according to `layout`."""
+def arrange(window, monitor, layout="center"):
+    """Move a window onto a monitor and arrange it according to the layout id `layout`."""
     if window.isMinimized or window.isMaximized:
         window.restore()
 
