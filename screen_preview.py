@@ -18,22 +18,28 @@ USAGE:
 Window moving, layouts and zoom are Windows-only (pygetwindow + pywin32).
 
 LAYOUT OF THE CODE (package `previewer`):
-    app.py              main window: assembles the pieces below
-    menubar.py          menu bar            about.py   About / privacy / licenses window
+    app.py              main window: assembles the pieces below, rebuilds them on a language change
+    menubar.py          Settings (language) and Help menus
+    about.py            About / privacy / licenses window
+    i18n.py, locales/   translations: one JSON file per language
+    settings.py         saved preferences (language)
     monitors.py         monitor list and selection
     window_control.py   list windows, layouts, zoom (the Windows-specific part)
-    panels/             one widget per feature: monitor, window, layout, zoom, preview
+    panels/             monitor picker, window controls, live preview
 """
 import tkinter as tk
 
-from previewer import window_control
+from previewer import i18n, window_control
 from previewer.app import ScreenPreviewApp
+from previewer.settings import Settings
 
 
 def main():
     window_control.enable_dpi_awareness()   # must run before the first window is created
+    settings = Settings()
+    i18n.set_language(settings.language)
     root = tk.Tk()
-    ScreenPreviewApp(root)
+    ScreenPreviewApp(root, settings)
     root.mainloop()
 
 

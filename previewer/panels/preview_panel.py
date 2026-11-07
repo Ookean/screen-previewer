@@ -1,3 +1,4 @@
+"""Feature: the live preview of the selected monitor."""
 import tkinter as tk
 
 from PIL import Image, ImageTk
@@ -9,10 +10,18 @@ class PreviewPanel(tk.Label):
     def __init__(self, parent, model):
         super().__init__(parent, bg="black")
         self.model = model
-        self._tk_img = None   # keep a reference, or Tk drops the image
+        self._tk_img = None      # keep a reference, or Tk drops the image
+        self._after_id = None
 
     def start(self):
         self._update()
+
+    def destroy(self):
+        # Stop the refresh loop, or it would keep running against a destroyed widget.
+        if self._after_id is not None:
+            self.after_cancel(self._after_id)
+            self._after_id = None
+        super().destroy()
 
     def _update(self):
         try:
@@ -35,4 +44,4 @@ class PreviewPanel(tk.Label):
         except Exception as e:
             print(f"Preview error: {e}")
 
-        self.after(self.REFRESH_MS, self._update)
+        self._after_id = self.after(self.REFRESH_MS, self._update)

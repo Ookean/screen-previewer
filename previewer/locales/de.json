@@ -1,0 +1,43 @@
+{
+  "_name": "Deutsch",
+
+  "app.title": "Monitor-Vorschau",
+  "app.title_monitor": "Vorschau Monitor {index}  ({width}x{height})",
+
+  "menu.settings": "Einstellungen",
+  "menu.language": "Sprache",
+  "menu.language_system": "Systemsprache",
+  "menu.help": "Hilfe",
+  "menu.about": "Info / Lizenzen",
+  "menu.report_issue": "Problem melden",
+
+  "common.refresh": "Aktualisieren",
+  "monitor.label": "Monitor:",
+
+  "window.label": "Fenster:",
+  "window.move": "Auf Monitor verschieben",
+  "window.none_found": "Keine Fenster gefunden",
+  "window.unavailable": "pygetwindow/pywin32 nicht installiert (pip install -r requirements.txt)",
+
+  "layout.label": "Anordnung:",
+  "layout.apply": "Anordnung anwenden",
+  "layout.center": "Zentriert",
+  "layout.maximize": "Maximiert",
+  "layout.left_half": "Linke Hälfte",
+  "layout.right_half": "Rechte Hälfte",
+  "layout.top_half": "Obere Hälfte",
+  "layout.bottom_half": "Untere Hälfte",
+
+  "zoom.label": "Zoom:",
+
+  "about.title": "Info zu {app}",
+  "about.tab_about": "Info",
+  "about.tab_privacy": "Datenschutz",
+  "about.tab_licenses": "Lizenzen von Drittanbietern",
+  "about.version": "Version {version}",
+  "about.description": "Live-Vorschau für Monitore, Fensterverschiebung und Zoom.",
+  "about.report_issue": "Problem melden",
+  "about.privacy_online": "Datenschutzerklärung (online)",
+  "about.privacy_missing": "Datenschutzerklärung in diesem Build nicht gefunden.",
+  "about.licenses_missing": "Lizenzdatei nicht gefunden. Mit tools/gen_licenses.py erzeugen."
+}
