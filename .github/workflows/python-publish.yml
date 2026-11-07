@@ -4,6 +4,7 @@ on:
     branches: [ main ]
     paths:
       - 'screen_preview.py'
+      - 'previewer/**'
       - 'requirements.txt'
       - 'requirements-build.txt'
       - 'tools/gen_licenses.py'
@@ -55,12 +56,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         run: |
-          (Get-Content screen_preview.py) -replace 'APP_VERSION = ".*"', "APP_VERSION = `"${{ steps.version.outputs.version }}`"" |
-            Set-Content screen_preview.py
+          (Get-Content previewer/config.py) -replace 'APP_VERSION = ".*"', "APP_VERSION = `"${{ steps.version.outputs.version }}`"" |
+            Set-Content previewer/config.py
 
       - name: Build executable (onedir)
         run: |
-          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
+          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "Assets/icon.ico;Assets" --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Zip portable build
         shell: pwsh
@@ -109,7 +110,6 @@ jobs:
         with:
           name: screen-preview-msix
           path: msix_output/*.msix
-
 
   release:
     needs: build
