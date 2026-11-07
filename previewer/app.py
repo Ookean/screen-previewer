@@ -1,6 +1,7 @@
 """Main window: assembles the menu bar and the panels."""
 import tkinter as tk
 
+from .config import resource_path
 from .menubar import build_menubar
 from .monitors import MonitorModel
 from .panels.monitor_panel import MonitorPanel
@@ -12,6 +13,12 @@ class ScreenPreviewApp:
     def __init__(self, root):
         self.root = root
         self.model = MonitorModel()   # which monitor is selected; shared by the panels below
+
+        try:
+            # default=... also gives the About window the same icon
+            root.iconbitmap(default=resource_path("Assets/icon.ico"))
+        except tk.TclError:
+            pass  # icon missing or not a valid .ico: keep Tk's default
 
         build_menubar(root)
         root.title("Monitor Preview")
