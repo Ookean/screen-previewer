@@ -1,2 +1,4 @@
 THIRD_PARTY_LICENSES.txt
 tmp
+previewer/__pychache__
+__pycache__/

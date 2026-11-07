@@ -3,7 +3,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'screen_preview.py'
+      - 'previewer/**'
       - 'requirements.txt'
       - 'requirements-build.txt'
       - 'tools/gen_licenses.py'
@@ -60,7 +60,7 @@ jobs:
 
       - name: Build executable (onedir)
         run: |
-          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
+          pyinstaller --onedir --windowed --name screen_preview app.py --icon=Assets/icon.ico --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Zip portable build
         shell: pwsh
