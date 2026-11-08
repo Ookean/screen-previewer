@@ -14,3 +14,8 @@ def resource_path(name):
     if base is None:
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, name)
+
+
+# Wayland sessions forbid reading the screen and moving other apps' windows without a permission dialog.
+ON_WAYLAND = sys.platform != "win32" and (
+    bool(os.environ.get("WAYLAND_DISPLAY")) or os.environ.get("XDG_SESSION_TYPE") == "wayland")

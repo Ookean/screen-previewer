@@ -1,4 +1,6 @@
 mss
 pillow
-pygetwindow
-pywin32
+pygetwindow; sys_platform == "win32"
+pywin32; sys_platform == "win32"
+python-xlib; sys_platform == "linux"
+jeepney; sys_platform == "linux"

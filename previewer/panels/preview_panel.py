@@ -3,12 +3,14 @@ import tkinter as tk
 
 from PIL import Image, ImageTk
 
+from ..i18n import t
+
 
 class PreviewPanel(tk.Label):
     REFRESH_MS = 100  # ~10 fps
 
     def __init__(self, parent, model):
-        super().__init__(parent, bg="black")
+        super().__init__(parent, bg="black", fg="white", wraplength=500)
         self.model = model
         self._tk_img = None      # keep a reference, or Tk drops the image
         self._after_id = None
@@ -26,10 +28,8 @@ class PreviewPanel(tk.Label):
     def _update(self):
         try:
             monitor = self.model.current
-            if monitor is not None:
-                shot = self.model.sct.grab(monitor)
-                img = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")
-
+            img = None if monitor is None else self.model.capture.grab(monitor)
+            if img is not None:
                 w, h = self.winfo_width(), self.winfo_height()
                 if w > 1 and h > 1:
                     img_ratio = img.width / img.height
@@ -40,7 +40,12 @@ class PreviewPanel(tk.Label):
                     img = img.resize((max(1, new_w), max(1, new_h)), Image.BILINEAR)
 
                 self._tk_img = ImageTk.PhotoImage(img)
-                self.configure(image=self._tk_img)
+                self.configure(image=self._tk_img, text="")
+            else:
+                status = self.model.capture.status()   # e.g. Wayland: waiting for the permission dialog
+                if status:
+                    self._tk_img = None
+                    self.configure(image="", text=t(status[0], **status[1]))
         except Exception as e:
             print(f"Preview error: {e}")
 

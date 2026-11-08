@@ -10,7 +10,6 @@ from .panels.monitor_panel import MonitorPanel
 from .panels.preview_panel import PreviewPanel
 from .panels.window_panel import WindowPanel
 
-
 class ScreenPreviewApp:
     def __init__(self, root, settings):
         self.root = root
@@ -20,9 +19,10 @@ class ScreenPreviewApp:
         try:
             # default=... also gives the About window the same icon
             root.iconbitmap(default=resource_path("Assets/icon.ico"))
-        except tk.TclError:
-            pass  # icon missing or not a valid .ico: keep Tk's default
+        except tk.TclError:   # Linux has no .ico support in Tk: use a PhotoImage instead
+            self._set_png_icon()
 
+        root.protocol("WM_DELETE_WINDOW", self.close)
         root.geometry("900x600")
         root.minsize(280, 240)
         self._build()
@@ -59,7 +59,22 @@ class ScreenPreviewApp:
         # Rebuild once the menu command has returned: destroying a menu from inside its own callback is unsafe.
         self.root.after_idle(self._build)
 
+    def _set_png_icon(self):
+        try:
+            from PIL import Image, ImageTk
+            self._icon = ImageTk.PhotoImage(Image.open(resource_path("Assets/icon.ico")))   # keep a reference
+            self.root.iconphoto(True, self._icon)
+        except Exception:
+            pass  # icon missing or unreadable: keep Tk's default
+
+    def close(self):
+        self.model.close()
+        self.root.destroy()
+
     def on_monitor_changed(self):
         monitor = self.model.current
+        if monitor["width"] <= 0:     # Wayland: size unknown until the user has allowed sharing
+            self.root.title(t("app.title"))
+            return
         self.root.title(t("app.title_monitor", index=self.model.index,
                           width=monitor["width"], height=monitor["height"]))

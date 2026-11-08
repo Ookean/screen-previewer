@@ -1,0 +1,1 @@
+"""The main window's parts: the monitor picker, the window controls and the live preview."""
