@@ -16,6 +16,7 @@ on:
       - '.github/workflows/build.yml'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
   workflow_dispatch: {}
 
 permissions:
@@ -27,6 +28,8 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: read
+    outputs:
+      prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -51,6 +54,8 @@ jobs:
           if ($env:GITHUB_REF -like 'refs/tags/*') { $v = $env:GITHUB_REF_NAME }
           else { $v = "0.0.$($env:GITHUB_RUN_NUMBER)" }
           "version=$v" >> $env:GITHUB_OUTPUT
+          # A version with a suffix (1.5.0-beta.1) is a prerelease. The Store needs a plain x.y.z, so betas get no MSIX.
+          "prerelease=$($v.Contains('-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
       - name: Stamp version in source (tags only)
         if: startsWith(github.ref, 'refs/tags/')
@@ -76,6 +81,7 @@ jobs:
       # --- MSIX package ---
 
       - name: Build MSIX package
+        if: steps.version.outputs.prerelease == 'false'
         shell: pwsh
         env:
           IDENTITY_NAME: ${{ secrets.MSIX_IDENTITY_NAME }}
@@ -107,6 +113,7 @@ jobs:
           & $makeappx.FullName pack /d msix_pkg /p "msix_output\screen_preview_$v.msix" /o
 
       - name: Upload MSIX artifact
+        if: steps.version.outputs.prerelease == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: screen-preview-msix
@@ -189,6 +196,7 @@ jobs:
       contents: write
     steps:
       - name: Download MSIX artifact
+        if: needs.build-windows.outputs.prerelease == 'false'
         uses: actions/download-artifact@v4
         with:
           name: screen-preview-msix
@@ -209,7 +217,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          fail_on_unmatched_files: true
+          prerelease: ${{ needs.build-windows.outputs.prerelease == 'true' }}
           generate_release_notes: true
           files: |
             msix_output/*.msix
