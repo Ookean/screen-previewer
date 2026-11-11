@@ -1,16 +1,21 @@
 """Monitor discovery and selection, independent of any widgets."""
-import mss
+from .capture import make_capture
+from .i18n import t
 
 
 def describe_monitor(index, monitor):
+    if monitor["width"] <= 0:   # Wayland: the screen is only known once the user has allowed sharing
+        return t("monitor.wayland_pending")
     return f"{index}: {monitor['width']}x{monitor['height']} at ({monitor['left']},{monitor['top']})"
 
 
 class MonitorModel:
-    """The monitors mss can see, and which one is selected (1-based, like mss)."""
+    """The monitors the capture can see, and which one is selected (1-based, like mss)."""
 
-    def __init__(self):
-        self.sct = mss.mss()
+    def __init__(self, capture=None, monitor_source=None):
+        """`monitor_source()` may list the desktop's real screens (Wayland); otherwise the capture's list is used."""
+        self.capture = capture or make_capture()
+        self.monitor_source = monitor_source
         self.monitors = []
         self.index = None
 
@@ -23,7 +28,7 @@ class MonitorModel:
 
     def refresh(self):
         """Re-read the monitors and keep the selection valid. Returns False if none were found."""
-        self.monitors = self.sct.monitors[1:]  # index 0 = combined virtual screen
+        self.monitors = self._read_monitors()
         if not self.monitors:
             self.index = None
             return False
@@ -32,5 +37,18 @@ class MonitorModel:
             self.index = 2 if len(self.monitors) > 1 else 1   # usually the extended screen
         return True
 
+    def _read_monitors(self):
+        if self.monitor_source is not None:
+            try:
+                monitors = self.monitor_source()
+                if monitors:
+                    return monitors
+            except Exception as e:
+                print(f"Monitor list error: {e}")
+        return self.capture.monitors()
+
     def select(self, index):
         self.index = index
+
+    def close(self):
+        self.capture.close()

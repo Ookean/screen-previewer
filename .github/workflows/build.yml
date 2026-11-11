@@ -1,4 +1,4 @@
-name: Build Windows Executable, Installer and MSIX
+name: Build Windows (MSIX, portable) and Linux (AppImage)
 on:
   push:
     branches: [ main ]
@@ -12,21 +12,24 @@ on:
       - 'msix/**'
       - 'Assets/**'
       - 'PRIVACY.md'
-      - '.github/workflows/build-exe.yml'
+      - 'linux/**'
+      - '.github/workflows/build.yml'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  # ---------------------------------------------------------------- Windows
+  build-windows:
     runs-on: windows-latest
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,7 +37,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install Python dependencies
         run: |
@@ -51,6 +54,8 @@ jobs:
           if ($env:GITHUB_REF -like 'refs/tags/*') { $v = $env:GITHUB_REF_NAME }
           else { $v = "0.0.$($env:GITHUB_RUN_NUMBER)" }
           "version=$v" >> $env:GITHUB_OUTPUT
+          # A version with a suffix (1.5.0-beta.1) is a prerelease. The Store needs a plain x.y.z, so betas get no MSIX.
+          "prerelease=$($v.Contains('-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
       - name: Stamp version in source (tags only)
         if: startsWith(github.ref, 'refs/tags/')
@@ -61,7 +66,7 @@ jobs:
 
       - name: Build executable (onedir)
         run: |
-          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "Assets/icon.ico;Assets" --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
+          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "Assets/icon.ico;Assets" --add-data "previewer/locales;previewer/locales" --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Zip portable build
         shell: pwsh
@@ -73,8 +78,10 @@ jobs:
           name: screen-preview-portable
           path: dist/screen_preview_portable.zip
 
+      # --- MSIX package ---
 
       - name: Build MSIX package
+        if: steps.version.outputs.prerelease == 'false'
         shell: pwsh
         env:
           IDENTITY_NAME: ${{ secrets.MSIX_IDENTITY_NAME }}
@@ -106,19 +113,90 @@ jobs:
           & $makeappx.FullName pack /d msix_pkg /p "msix_output\screen_preview_$v.msix" /o
 
       - name: Upload MSIX artifact
+        if: steps.version.outputs.prerelease == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: screen-preview-msix
           path: msix_output/*.msix
 
+  # ---------------------------------------------------------------- Linux
+  build-linux:
+    runs-on: ubuntu-22.04   # oldest runner image: the AppImage then also runs on older distributions
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install system libraries (build machine only)
+        run: sudo apt-get update && sudo apt-get install -y libtk8.6 libtcl8.6 binutils
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Generate third-party license file
+        run: python tools/gen_licenses.py
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then v="$GITHUB_REF_NAME"; else v="0.0.$GITHUB_RUN_NUMBER"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version in source (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: sed -i "s/APP_VERSION = \".*\"/APP_VERSION = \"${{ steps.version.outputs.version }}\"/" previewer/config.py
+
+      - name: Build executable (onedir)
+        run: |
+          pyinstaller --onedir --windowed --name screen_preview screen_preview.py \
+            --add-data "Assets/icon.ico:Assets" \
+            --add-data "previewer/locales:previewer/locales" \
+            --add-data "THIRD_PARTY_LICENSES.txt:." \
+            --add-data "PRIVACY.md:."
+
+      - name: Build AppImage
+        run: |
+          APPDIR=AppDir
+          mkdir -p "$APPDIR/usr/bin"
+          cp -r dist/screen_preview "$APPDIR/usr/bin/"
+          cp linux/screen-preview.desktop "$APPDIR/"
+          python -c "from PIL import Image; Image.open('Assets/icon.ico').convert('RGBA').resize((256,256)).save('$APPDIR/screen-preview.png')"
+          cat > "$APPDIR/AppRun" <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/screen_preview/screen_preview" "$@"
+          EOF
+          chmod +x "$APPDIR/AppRun"
+          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          mkdir -p linux_output
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool "$APPDIR" \
+            "linux_output/Screen_Preview-${{ steps.version.outputs.version }}-x86_64.AppImage"
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-preview-appimage
+          path: linux_output/*.AppImage
+
+  # ---------------------------------------------------------------- Release
   release:
-    needs: build
+    needs: [build-windows, build-linux]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Download MSIX artifact
+        if: needs.build-windows.outputs.prerelease == 'false'
         uses: actions/download-artifact@v4
         with:
           name: screen-preview-msix
@@ -130,13 +208,20 @@ jobs:
           name: screen-preview-portable
           path: dist
 
+      - name: Download AppImage
+        uses: actions/download-artifact@v4
+        with:
+          name: screen-preview-appimage
+          path: linux_output
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          fail_on_unmatched_files: true
+          prerelease: ${{ needs.build-windows.outputs.prerelease == 'true' }}
           generate_release_notes: true
           files: |
             msix_output/*.msix
             dist/screen_preview_portable.zip
+            linux_output/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

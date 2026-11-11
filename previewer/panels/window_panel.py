@@ -59,7 +59,7 @@ class WindowPanel(tk.Frame):
         if not window_control.AVAILABLE:
             for control in self.controls:
                 control.configure(state="disabled")
-            self.window_var.set(t("window.unavailable"))
+            self.window_var.set(t(window_control.UNAVAILABLE_REASON))
 
     def refresh(self):
         """Reload the list of open windows."""

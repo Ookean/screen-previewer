@@ -10,7 +10,7 @@ The idea for this tool originated through various dnd sessions and was created w
 
 ## Requirements
  
-- Python 3.11+
+- Python 3.13+
 - Dependencies: See [requirements.txt](https://github.com/Ookean/screen-previewer/blob/main/requirements.txt)
 ## Quick install (regular pip installer)
  
