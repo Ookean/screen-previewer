@@ -12,8 +12,10 @@ def describe_monitor(index, monitor):
 class MonitorModel:
     """The monitors the capture can see, and which one is selected (1-based, like mss)."""
 
-    def __init__(self, capture=None):
+    def __init__(self, capture=None, monitor_source=None):
+        """`monitor_source()` may list the desktop's real screens (Wayland); otherwise the capture's list is used."""
         self.capture = capture or make_capture()
+        self.monitor_source = monitor_source
         self.monitors = []
         self.index = None
 
@@ -26,7 +28,7 @@ class MonitorModel:
 
     def refresh(self):
         """Re-read the monitors and keep the selection valid. Returns False if none were found."""
-        self.monitors = self.capture.monitors()
+        self.monitors = self._read_monitors()
         if not self.monitors:
             self.index = None
             return False
@@ -34,6 +36,16 @@ class MonitorModel:
         if self.index is None or not 1 <= self.index <= len(self.monitors):
             self.index = 2 if len(self.monitors) > 1 else 1   # usually the extended screen
         return True
+
+    def _read_monitors(self):
+        if self.monitor_source is not None:
+            try:
+                monitors = self.monitor_source()
+                if monitors:
+                    return monitors
+            except Exception as e:
+                print(f"Monitor list error: {e}")
+        return self.capture.monitors()
 
     def select(self, index):
         self.index = index

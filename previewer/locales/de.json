@@ -31,10 +31,12 @@
   "monitor.wayland_pending": "Im Systemdialog gewählter Bildschirm",
   "preview.wayland_error": "Bildschirmaufnahme fehlgeschlagen: {error}",
   "preview.wayland_waiting": "Bitte die Bildschirmfreigabe im Systemdialog erlauben…",
+  "window.hint_report": "Dein Desktop ({desktop}) wird noch nicht vollständig unterstützt. Teile uns mit, welches System du nutzt, damit wir Unterstützung ergänzen können.",
   "window.label": "Fenster:",
   "window.move": "Auf Monitor verschieben",
   "window.none_found": "Keine Fenster gefunden",
+  "window.report_desktop": "Meinen Desktop melden",
   "window.unavailable": "Bibliotheken für die Fenstersteuerung fehlen (pip install -r requirements.txt)",
-  "window.unavailable_wayland": "Die Fenstersteuerung braucht eine X11-Sitzung (Wayland erlaubt sie nicht)",
+  "window.unavailable_wayland": "Die Fenstersteuerung ist auf diesem Desktop noch nicht verfügbar",
   "zoom.label": "Zoom:"
 }

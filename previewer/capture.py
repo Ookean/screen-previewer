@@ -9,12 +9,12 @@ Both give a list of mss-style monitor dicts and a `grab(monitor)` that returns a
 """
 import subprocess
 import threading
-import uuid
 
 import mss
 from PIL import Image
 
 from .config import ON_WAYLAND
+from .portal import Portal, new_token
 
 
 class MssCapture:
@@ -103,46 +103,20 @@ class PortalCapture:
 
 
 # ---------------------------------------------------------------------- xdg-desktop-portal ScreenCast
-_PORTAL = "org.freedesktop.portal.Desktop"
-_PORTAL_PATH = "/org/freedesktop/portal/desktop"
-_DIALOG_TIMEOUT = 300   # seconds the user has to answer the permission dialog
-
-
 def _open_screencast():
     """Ask for a screen, return (PipeWire node id, PipeWire fd, (width, height)). Blocks until the user answers."""
-    from jeepney import DBusAddress, MatchRule, new_method_call
-    from jeepney.bus_messages import message_bus
-    from jeepney.io.blocking import Proxy, open_dbus_connection
-
-    conn = open_dbus_connection(bus="SESSION", enable_fds=True)
-    screencast = DBusAddress(_PORTAL_PATH, bus_name=_PORTAL, interface="org.freedesktop.portal.ScreenCast")
-    sender = conn.unique_name.lstrip(":").replace(".", "_")
-
-    def request(method, signature, make_body):
-        """Call a portal method that answers with a Request/Response signal; return its results dict."""
-        token = "sp" + uuid.uuid4().hex[:12]
-        path = f"{_PORTAL_PATH}/request/{sender}/{token}"
-        rule = MatchRule(type="signal", interface="org.freedesktop.portal.Request", member="Response", path=path)
-        Proxy(message_bus, conn).AddMatch(rule)     # listen before calling, so the answer cannot be missed
-        with conn.filter(rule) as answers:
-            conn.send_and_get_reply(new_method_call(screencast, method, signature, make_body({"handle_token": ("s", token)})))
-            reply = conn.recv_until_filtered(answers, timeout=_DIALOG_TIMEOUT)
-        code, results = reply.body
-        if code != 0:
-            raise RuntimeError("screen sharing was not allowed" if code == 1 else f"portal error {code}")
-        return results
-
-    session = request("CreateSession", "a{sv}",
-                      lambda o: (dict(o, session_handle_token=("s", "sp" + uuid.uuid4().hex[:12])),))["session_handle"][1]
-    request("SelectSources", "oa{sv}",
-            lambda o: (session, dict(o, types=("u", 1), multiple=("b", False), cursor_mode=("u", 2))))
-    streams = request("Start", "osa{sv}", lambda o: (session, "", o))["streams"][1]
+    portal = Portal()
+    session = portal.request("ScreenCast", "CreateSession", "a{sv}",
+                             lambda o: (dict(o, session_handle_token=("s", new_token())),))["session_handle"][1]
+    portal.request("ScreenCast", "SelectSources", "oa{sv}",
+                   lambda o: (session, dict(o, types=("u", 1), multiple=("b", False), cursor_mode=("u", 2))))
+    streams = portal.request("ScreenCast", "Start", "osa{sv}", lambda o: (session, "", o))["streams"][1]
     if not streams:
         raise RuntimeError("no screen was shared")
     node, properties = streams[0]
     size = properties["size"][1] if "size" in properties else (1920, 1080)
 
-    reply = conn.send_and_get_reply(new_method_call(screencast, "OpenPipeWireRemote", "oa{sv}", (session, {})))
+    reply = portal.call("ScreenCast", "OpenPipeWireRemote", "oa{sv}", (session, {}))
     return node, reply.body[0].to_raw_fd(), tuple(size)
 
 

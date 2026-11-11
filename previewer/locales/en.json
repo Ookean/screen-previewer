@@ -31,10 +31,12 @@
   "monitor.wayland_pending": "Screen chosen in the system dialog",
   "preview.wayland_error": "Screen capture failed: {error}",
   "preview.wayland_waiting": "Waiting for you to allow screen sharing in the system dialog…",
+  "window.hint_report": "Your desktop ({desktop}) is not fully supported yet. Tell us which system you use so support can be added.",
   "window.label": "Window:",
   "window.move": "Move to Monitor",
   "window.none_found": "No windows found",
+  "window.report_desktop": "Report my desktop",
   "window.unavailable": "Window control libraries not installed (pip install -r requirements.txt)",
-  "window.unavailable_wayland": "Window control needs an X11 session (Wayland does not allow it)",
+  "window.unavailable_wayland": "Window control is not available on this desktop yet",
   "zoom.label": "Zoom:"
 }

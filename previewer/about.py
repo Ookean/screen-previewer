@@ -1,18 +1,27 @@
 """About window with the privacy policy and third-party license texts."""
 import os
 import tkinter as tk
+import urllib.parse
 import webbrowser
 from tkinter import font as tkfont
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 
 from . import i18n
-from .config import APP_NAME, APP_VERSION, PRIVACY_URL, REPO_URL, resource_path
+from .config import APP_NAME, APP_VERSION, PRIVACY_URL, REPO_URL, desktop_info, resource_path
 from .i18n import t
 
 
 def open_issues():
     webbrowser.open(f"{REPO_URL}/issues")
+
+
+def open_desktop_issue():
+    """Open a new GitHub issue in the browser, with the user's desktop already filled in for them to review."""
+    body = (f"My desktop is not fully supported yet.\n\nDesktop / session / distribution: {desktop_info()}\n"
+            f"Screen Preview version: {APP_VERSION}\n\nWhat I expected to work:\n")
+    query = urllib.parse.urlencode({"title": "Support for my desktop", "body": body})
+    webbrowser.open(f"{REPO_URL}/issues/new?{query}")
 
 
 def privacy_path():
