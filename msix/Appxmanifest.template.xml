@@ -17,6 +17,8 @@
   </Dependencies>
   <Resources>
     <Resource Language="en-us" />
+    <Resource Language="de-de" />
+    <Resource Language="de-ch" />
   </Resources>
   <Applications>
     <Application Id="App" Executable="screen_preview.exe" EntryPoint="Windows.FullTrustApplication">
