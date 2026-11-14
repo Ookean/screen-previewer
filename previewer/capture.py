@@ -8,6 +8,7 @@ PortalCapture   Wayland: asks the desktop for permission through xdg-desktop-por
 Both give a list of mss-style monitor dicts and a `grab(monitor)` that returns a PIL image or None.
 """
 import subprocess
+import tempfile
 import threading
 
 import mss
@@ -86,9 +87,9 @@ class PortalCapture:
         caps = f"video/x-raw,format=RGBx,width={width},height={height},framerate={self.FPS}/1"
         command = ["gst-launch-1.0", "-q", "pipewiresrc", f"fd={fd}", f"path={node}", "!", "videorate", "!",
                    "videoconvert", "!", "videoscale", "!", caps, "!", "fdsink", "fd=1"]
+        errors = tempfile.TemporaryFile()    # GStreamer says why it failed here; shown if the stream ends early
         try:
-            self._proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                          pass_fds=(fd,))
+            self._proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=errors, pass_fds=(fd,))
         except FileNotFoundError:
             raise RuntimeError("gst-launch-1.0 not found: install GStreamer and its PipeWire plugin")
 
@@ -96,7 +97,10 @@ class PortalCapture:
         while not self._stop.is_set():
             data = self._proc.stdout.read(frame_size)
             if len(data) < frame_size:
-                raise RuntimeError("the screen stream ended (is GStreamer's PipeWire plugin installed?)")
+                errors.seek(0)
+                lines = errors.read().decode("utf-8", "replace").strip().splitlines()
+                raise RuntimeError("the screen stream ended: " + lines[-1][:200] if lines
+                                   else "the screen stream ended (is GStreamer's PipeWire plugin installed?)")
             image = Image.frombytes("RGB", (width, height), data, "raw", "RGBX")
             with self._lock:
                 self._frame = image

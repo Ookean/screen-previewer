@@ -1,88 +1,103 @@
-"""Main window: assembles the menu bar and the panels, and rebuilds them when the language changes."""
-import tkinter as tk
+"""Main window: a sidebar of control cards next to the live preview. Rebuilds itself on language or theme changes."""
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QMainWindow, QScrollArea, QVBoxLayout, QWidget)
 
-from . import i18n
-from .config import resource_path
+from . import i18n, theme, window_control
 from .i18n import t
-from . import window_control
-from .menubar import build_menubar
+from .menubar import build_menus
 from .monitors import MonitorModel
 from .panels.monitor_panel import MonitorPanel
 from .panels.preview_panel import PreviewPanel
 from .panels.window_panel import WindowPanel
 
-class ScreenPreviewApp:
-    def __init__(self, root, settings):
-        self.root = root
+SIDEBAR_WIDTH = 316
+
+
+class ScreenPreviewApp(QMainWindow):
+    def __init__(self, settings):
+        super().__init__()
         self.settings = settings
-        self.model = MonitorModel(monitor_source=window_control.list_monitors)   # which monitor is selected; shared by the panels
-
-        try:
-            # default=... also gives the About window the same icon
-            root.iconbitmap(default=resource_path("Assets/icon.ico"))
-        except tk.TclError:   # Linux has no .ico support in Tk: use a PhotoImage instead
-            self._set_png_icon()
-
-        root.protocol("WM_DELETE_WINDOW", self.close)
-        root.geometry("900x600")
-        root.minsize(280, 240)
+        self.model = MonitorModel(monitor_source=window_control.list_monitors)   # selected monitor, shared by the panels
+        self.resize(1120, 700)
+        self.setMinimumSize(760, 520)
         self._build()
 
     def _build(self):
-        """Create the menu bar and all panels. Runs at startup and again after a language change."""
-        old_widgets = self.root.winfo_children()
+        """Create the menus and all panels. Runs at startup and again after a language or theme change."""
+        build_menus(self, self.settings, self.on_language_chosen, self.on_theme_chosen)
+        self.setWindowTitle(t("app.title"))
 
-        build_menubar(self.root, self.settings, self.on_language_chosen)
-        self.root.title(t("app.title"))
+        self.monitor_panel = MonitorPanel(self.model)
+        self.monitor_panel.changed.connect(self.on_monitor_changed)
+        self.window_panel = WindowPanel(self.model, on_action_done=self.restore_focus)
+        self.window_panel.message.connect(lambda text: self.statusBar().showMessage(text, 5000))
 
-        self.monitor_panel = MonitorPanel(self.root, self.model, on_change=self.on_monitor_changed)
-        self.monitor_panel.pack(side=tk.TOP, fill=tk.X, padx=6, pady=(6, 3))
+        controls = QWidget()
+        controls.setObjectName("sidebar")
+        column = QVBoxLayout(controls)
+        column.setContentsMargins(0, 0, 4, 0)
+        column.setSpacing(12)
+        column.addWidget(self.monitor_panel)
+        column.addWidget(self.window_panel)
+        column.addStretch(1)
 
-        self.window_panel = WindowPanel(self.root, self.model, on_action_done=self.restore_focus)
-        self.window_panel.pack(side=tk.TOP, fill=tk.X, padx=6, pady=(0, 6))
+        sidebar = QScrollArea()          # scrolls on a short window instead of squashing the controls
+        sidebar.setWidgetResizable(True)
+        sidebar.setFrameShape(QFrame.Shape.NoFrame)
+        sidebar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        sidebar.setFixedWidth(SIDEBAR_WIDTH)
+        sidebar.setWidget(controls)
 
-        self.preview = PreviewPanel(self.root, self.model)
-        self.preview.pack(fill=tk.BOTH, expand=True)
-
-        # The old widgets go only now, after the new menu bar is attached, so the window
-        # never points at a destroyed menu. This also closes an open About window.
-        for widget in old_widgets:
-            widget.destroy()
+        self.preview = PreviewPanel(self.model)
+        central = QWidget()
+        row = QHBoxLayout(central)
+        row.setContentsMargins(12, 8, 12, 4)
+        row.setSpacing(12)
+        row.addWidget(sidebar)
+        row.addWidget(self.preview, 1)
+        self.setCentralWidget(central)   # Qt deletes the previous central widget, and with it the old panels
 
         self.monitor_panel.refresh()
         self.window_panel.refresh()
         self.preview.start()
 
+    # ------------------------------------------------------------------ settings changes
     def on_language_chosen(self, preference):
         """Called from the Language menu with "system" or a language code."""
         self.settings.set_language(preference)
         i18n.set_language(preference)
-        # Rebuild once the menu command has returned: destroying a menu from inside its own callback is unsafe.
-        self.root.after_idle(self._build)
+        # Rebuild after the menu command has returned: deleting a menu from inside its own handler is unsafe.
+        QTimer.singleShot(0, self._build)
 
-    def _set_png_icon(self):
-        try:
-            from PIL import Image, ImageTk
-            self._icon = ImageTk.PhotoImage(Image.open(resource_path("Assets/icon.ico")))   # keep a reference
-            self.root.iconphoto(True, self._icon)
-        except Exception:
-            pass  # icon missing or unreadable: keep Tk's default
+    def on_theme_chosen(self, preference):
+        """Called from the Appearance menu with "system", "light" or "dark"."""
+        self.settings.set_theme(preference)
+        theme.apply(QApplication.instance(), preference)
+        QTimer.singleShot(0, self._build)      # the layout icons are drawn in the theme's colour
+
+    def follow_system_theme(self):
+        """Switch along when the operating system changes between light and dark (if the user chose "system")."""
+        def changed(*_):
+            if self.settings.theme == theme.SYSTEM:
+                self.on_theme_chosen(theme.SYSTEM)
+        QApplication.instance().styleHints().colorSchemeChanged.connect(changed)
+
+    # ------------------------------------------------------------------ events
+    def on_monitor_changed(self):
+        monitor = self.model.current
+        if monitor["width"] <= 0:     # Wayland: size unknown until the user has allowed sharing
+            self.setWindowTitle(t("app.title"))
+            return
+        self.setWindowTitle(t("app.title_monitor", index=self.model.index,
+                              width=monitor["width"], height=monitor["height"]))
 
     def restore_focus(self):
         """Moving or zooming another window activates it; take the focus back so the next click lands here."""
         try:
-            window_control.focus_own_window(self.root)
+            window_control.focus_own_window(int(self.winId()))
         except Exception as e:
             print(f"Focus error: {e}")
 
-    def close(self):
+    def closeEvent(self, event):
         self.model.close()
-        self.root.destroy()
-
-    def on_monitor_changed(self):
-        monitor = self.model.current
-        if monitor["width"] <= 0:     # Wayland: size unknown until the user has allowed sharing
-            self.root.title(t("app.title"))
-            return
-        self.root.title(t("app.title_monitor", index=self.model.index,
-                          width=monitor["width"], height=monitor["height"]))
+        super().closeEvent(event)

@@ -4,6 +4,7 @@ import os
 import sys
 
 APP_FOLDER = "ScreenPreview"
+THEME_CHOICES = ("system", "light", "dark")   # "system" = follow the operating system
 
 
 def default_settings_path():
@@ -17,7 +18,7 @@ def default_settings_path():
 class Settings:
     """Saved preferences. A missing, unreadable or broken file simply gives the defaults."""
 
-    DEFAULTS = {"language": "system"}   # "system" = follow the operating system
+    DEFAULTS = {"language": "system", "theme": "system"}   # "system" = follow the operating system
 
     def __init__(self, path=None):
         self.path = path or default_settings_path()
@@ -27,6 +28,14 @@ class Settings:
     @property
     def language(self):
         return self.values["language"]
+
+    @property
+    def theme(self):
+        return self.values["theme"]
+
+    def set_theme(self, theme):
+        self.values["theme"] = theme
+        self.save()
 
     def set_language(self, code):
         self.values["language"] = code
@@ -51,3 +60,5 @@ class Settings:
         for key, default in self.DEFAULTS.items():
             if isinstance(data.get(key), type(default)):
                 self.values[key] = data[key]
+        if self.values["theme"] not in THEME_CHOICES:   # hand-edited or from another version
+            self.values["theme"] = Settings.DEFAULTS["theme"]

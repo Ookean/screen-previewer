@@ -16,18 +16,10 @@ UNAVAILABLE_REASON = None if AVAILABLE else "window.unavailable"
 ZOOM_KEYS = {"in": 0xBB, "out": 0xBD, "reset": 0x30}  # VK_OEM_PLUS, VK_OEM_MINUS, '0'
 
 
-def enable_dpi_awareness():
-    """Keep window coordinates in real pixels. Call before any window is created."""
-    try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)
-    except Exception:
-        pass
-
-
-def focus_own_window(root):
-    """Bring this app's window back to the front after zoom or maximize activated another window."""
+def focus_own_window(handle):
+    """Bring this app's window (native handle) back to the front after zoom or maximize activated another window."""
     user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
-    hwnd = user32.GetParent(root.winfo_id()) or root.winfo_id()   # Tk's id is a child of the real top-level window
+    hwnd = user32.GetParent(handle) or handle   # a top-level window has no parent: then the handle is the window
     foreground = user32.GetForegroundWindow()
     if foreground == hwnd:
         return
@@ -41,6 +33,11 @@ def focus_own_window(root):
     finally:
         if attached:
             user32.AttachThreadInput(mine, other, False)
+
+
+def window_key(window):
+    """Something that stays the same for the same window between two lists of windows (its native handle)."""
+    return window._hWnd
 
 
 def list_windows():

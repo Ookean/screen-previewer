@@ -1,8 +1,11 @@
-"""Generate THIRD_PARTY_LICENSES.txt from installed package metadata."""
-import glob
-import os
+"""Generate THIRD_PARTY_LICENSES.txt from installed package metadata.
+
+Usage: python tools/gen_licenses.py [requirements-file] [output-file]
+Run it after installing that requirements file, on the platform you are building for.
+"""
 import re
 import sys
+import sysconfig
 from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
 
@@ -12,6 +15,7 @@ from packaging.utils import canonicalize_name
 LICENSE_FILE = re.compile(r"(^|/)(LICEN[CS]E|COPYING|NOTICE)[^/]*$", re.I)
 HEADER = "THIRD-PARTY LICENSES\n" + "=" * 60 + "\n"
 RULE = "-" * 60
+QT_NOTICE = Path(__file__).parent / "licenses" / "qt.txt"
 
 
 def read(path):
@@ -23,8 +27,21 @@ def warn(msg):
 
 
 def read_requirements(path):
-    lines = (line.split("#")[0].strip() for line in open(path, encoding="utf-8"))
-    return [Requirement(line).name for line in lines if line]
+    """Package names in a requirements file, following `-r` includes and
+    skipping entries whose environment marker doesn't apply on this platform."""
+    path = Path(path)
+    names = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#")[0].strip()
+        if not line:
+            continue
+        if line.startswith(("-r ", "--requirement ")):
+            names += read_requirements(path.parent / line.split(None, 1)[1].strip())
+        elif not line.startswith("-"):
+            req = Requirement(line)
+            if not req.marker or req.marker.evaluate():
+                names.append(req.name)
+    return names
 
 
 def walk(names):
@@ -76,23 +93,22 @@ def package_block(dist):
 
 
 def runtime_blocks():
-    """Python (PSF) and Tcl/Tk license texts from the interpreter's install."""
-    base = sys.base_prefix
+    """Python (PSF) license text and the Qt notice."""
     blocks = []
 
-    py = os.path.join(base, "LICENSE.txt")
-    if os.path.exists(py):
+    candidates = [Path(sys.base_prefix) / "LICENSE.txt",
+                  Path(sysconfig.get_path("stdlib")) / "LICENSE.txt"]
+    py = next((p for p in candidates if p.exists()), None)
+    if py:
         blocks.append(f"\n{RULE}\nPython {sys.version.split()[0]}\n"
                       f"License: PSF-2.0\nURL: https://www.python.org\n\n{read(py)}")
     else:
         warn("Python LICENSE.txt not found")
 
-    tcl = glob.glob(os.path.join(base, "tcl", "**", "license.terms"), recursive=True)
-    if tcl:
-        blocks.append(f"\n{RULE}\nTcl/Tk\nLicense: Tcl/Tk (BSD-style)\n"
-                      f"URL: https://www.tcl-lang.org\n\n{read(sorted(tcl)[0])}")
+    if QT_NOTICE.exists():
+        blocks.append(f"\n{RULE}\nQt\nLicense: LGPL-3.0\nURL: https://www.qt.io\n\n{read(QT_NOTICE)}")
     else:
-        warn("Tcl/Tk license.terms not found")
+        warn("tools/licenses/qt.txt missing")
     return blocks
 
 
