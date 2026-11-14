@@ -24,6 +24,25 @@ def enable_dpi_awareness():
         pass
 
 
+def focus_own_window(root):
+    """Bring this app's window back to the front after zoom or maximize activated another window."""
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    hwnd = user32.GetParent(root.winfo_id()) or root.winfo_id()   # Tk's id is a child of the real top-level window
+    foreground = user32.GetForegroundWindow()
+    if foreground == hwnd:
+        return
+    # Windows only lets the program that owns the foreground take it over. Sharing its input queue
+    # for a moment gets around that without sending any fake key presses to the other window.
+    other = user32.GetWindowThreadProcessId(foreground, None)
+    mine = kernel32.GetCurrentThreadId()
+    attached = bool(other and other != mine and user32.AttachThreadInput(mine, other, True))
+    try:
+        user32.SetForegroundWindow(hwnd)
+    finally:
+        if attached:
+            user32.AttachThreadInput(mine, other, False)
+
+
 def list_windows():
     return [w for w in gw.getAllWindows()
             if w.title.strip() and w.visible and w.width > 0 and w.height > 0]
