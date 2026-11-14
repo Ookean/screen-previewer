@@ -37,7 +37,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install Python dependencies
         run: |
@@ -131,7 +131,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install system libraries (build machine only; PyInstaller copies the Qt ones into the app)
         run: sudo apt-get update && sudo apt-get install -y binutils libegl1 libgl1 libfontconfig1 libdbus-1-3 libxkbcommon-x11-0 \
