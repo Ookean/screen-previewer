@@ -46,6 +46,10 @@ def enable_dpi_awareness():
     """Nothing to do on Linux; present so callers need no platform check."""
 
 
+def focus_own_window(root):
+    """Wayland does not let an app take the focus back by itself: nothing to do."""
+
+
 def list_windows():
     return _backend.windows()
 

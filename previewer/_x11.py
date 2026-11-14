@@ -92,6 +92,12 @@ def _resolve(window):
     return _dpy().create_resource_object("window", window.id)
 
 
+def focus_own_window(root):
+    """Bring this app's window back to the front after zoom or maximize activated another window."""
+    _activate(_resolve(Window(root.winfo_id(), "", 0, 0)))
+    _dpy().flush()
+
+
 def list_windows():
     root = _dpy().screen().root
     ids = _prop(root, "_NET_CLIENT_LIST") or []

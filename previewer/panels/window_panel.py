@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from .. import window_control
+from ..about import open_desktop_issue
+from ..config import desktop_info
 from ..i18n import t
 
 
@@ -16,10 +18,13 @@ class WindowPanel(tk.Frame):
     """
 
     ZOOM_BUTTONS = (("−", "out"), ("+", "in"), ("100%", "reset"))
+    REFOCUS_MS = 300   # let the other window receive its keys before we take the focus back
 
-    def __init__(self, parent, model):
+    def __init__(self, parent, model, on_action_done=None):
+        """`on_action_done()` is called shortly after a move or zoom (the app uses it to take the focus back)."""
         super().__init__(parent)
         self.model = model
+        self.on_action_done = on_action_done
         self.windows = []
 
         # Row 1: pick a window and send it to the selected monitor
@@ -57,9 +62,20 @@ class WindowPanel(tk.Frame):
         # Without pygetwindow/pywin32 none of the controls can work.
         self.controls = [self.window_combo, refresh_btn, move_btn, self.layout_combo, apply_btn, *zoom_btns]
         if not window_control.AVAILABLE:
-            for control in self.controls:
+            for control in self.controls[:5]:
                 control.configure(state="disabled")
             self.window_var.set(t(window_control.UNAVAILABLE_REASON))
+        if not window_control.ZOOM_AVAILABLE:
+            for btn in zoom_btns:
+                btn.configure(state="disabled")
+
+        # A Wayland desktop we have no backend for: ask the user to tell us which one it is.
+        if window_control.NEEDS_SUPPORT_REPORT:
+            hint = tk.Frame(self)
+            hint.pack(side=tk.TOP, fill=tk.X, pady=(3, 0))
+            tk.Label(hint, text=t("window.hint_report", desktop=desktop_info()), wraplength=560,
+                     justify=tk.LEFT).pack(side=tk.LEFT)
+            tk.Button(hint, text=t("window.report_desktop"), command=open_desktop_issue).pack(side=tk.LEFT, padx=(6, 0))
 
     def refresh(self):
         """Reload the list of open windows."""
@@ -97,6 +113,7 @@ class WindowPanel(tk.Frame):
             window_control.zoom(window, action)
         except Exception as e:
             print(f"Zoom error: {e}")
+        self._action_done()
 
     def _arrange(self, layout):
         window, monitor = self.selected_window(), self.model.current
@@ -106,3 +123,8 @@ class WindowPanel(tk.Frame):
             window_control.arrange(window, monitor, layout)
         except Exception as e:
             print(f"Arrange error: {e}")
+        self._action_done()
+
+    def _action_done(self):
+        if self.on_action_done is not None:
+            self.after(self.REFOCUS_MS, self.on_action_done)

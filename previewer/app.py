@@ -4,6 +4,7 @@ import tkinter as tk
 from . import i18n
 from .config import resource_path
 from .i18n import t
+from . import window_control
 from .menubar import build_menubar
 from .monitors import MonitorModel
 from .panels.monitor_panel import MonitorPanel
@@ -14,7 +15,7 @@ class ScreenPreviewApp:
     def __init__(self, root, settings):
         self.root = root
         self.settings = settings
-        self.model = MonitorModel()   # which monitor is selected; shared by the panels
+        self.model = MonitorModel(monitor_source=window_control.list_monitors)   # which monitor is selected; shared by the panels
 
         try:
             # default=... also gives the About window the same icon
@@ -37,7 +38,7 @@ class ScreenPreviewApp:
         self.monitor_panel = MonitorPanel(self.root, self.model, on_change=self.on_monitor_changed)
         self.monitor_panel.pack(side=tk.TOP, fill=tk.X, padx=6, pady=(6, 3))
 
-        self.window_panel = WindowPanel(self.root, self.model)
+        self.window_panel = WindowPanel(self.root, self.model, on_action_done=self.restore_focus)
         self.window_panel.pack(side=tk.TOP, fill=tk.X, padx=6, pady=(0, 6))
 
         self.preview = PreviewPanel(self.root, self.model)
@@ -66,6 +67,13 @@ class ScreenPreviewApp:
             self.root.iconphoto(True, self._icon)
         except Exception:
             pass  # icon missing or unreadable: keep Tk's default
+
+    def restore_focus(self):
+        """Moving or zooming another window activates it; take the focus back so the next click lands here."""
+        try:
+            window_control.focus_own_window(self.root)
+        except Exception as e:
+            print(f"Focus error: {e}")
 
     def close(self):
         self.model.close()

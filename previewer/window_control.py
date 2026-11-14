@@ -6,6 +6,7 @@ Public names (same on every platform):
     NEEDS_SUPPORT_REPORT            True on a Wayland desktop that is not fully supported: ask the user to report it
     list_monitors                   the desktop's own screen list, or None to use the capture's list
     LAYOUTS, compute_placement      layout ids and the geometry maths (layouts.py)
+    focus_own_window(root)          give the focus back to this app after another window was activated
     enable_dpi_awareness(), list_windows(), arrange(window, monitor, layout), zoom(window, action)
 """
 import sys
@@ -27,5 +28,6 @@ list_monitors = getattr(_impl, "list_monitors", None)
 NEEDS_SUPPORT_REPORT = ON_WAYLAND and not (AVAILABLE and ZOOM_AVAILABLE)
 enable_dpi_awareness = _impl.enable_dpi_awareness
 list_windows = _impl.list_windows
+focus_own_window = _impl.focus_own_window
 arrange = _impl.arrange
 zoom = _impl.zoom
