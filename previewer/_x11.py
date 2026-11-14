@@ -37,10 +37,6 @@ class Window:
     height: int
 
 
-def enable_dpi_awareness():
-    """Nothing to do on Linux; present so callers need no platform check."""
-
-
 def _dpy():
     global _display
     if _display is None:
@@ -92,10 +88,15 @@ def _resolve(window):
     return _dpy().create_resource_object("window", window.id)
 
 
-def focus_own_window(root):
-    """Bring this app's window back to the front after zoom or maximize activated another window."""
-    _activate(_resolve(Window(root.winfo_id(), "", 0, 0)))
+def focus_own_window(handle):
+    """Bring this app's window (native handle) back to the front after zoom or maximize activated another window."""
+    _activate(_resolve(Window(handle, "", 0, 0)))
     _dpy().flush()
+
+
+def window_key(window):
+    """Something that stays the same for the same window between two lists of windows."""
+    return window.id
 
 
 def list_windows():

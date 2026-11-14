@@ -1,0 +1,10 @@
+This application uses the Qt toolkit through PySide6 (Qt for Python).
+
+Qt and PySide6 are licensed under the GNU Lesser General Public License, version 3 (LGPLv3), and this
+application uses them under that license. The Qt libraries are shipped as separate shared libraries
+next to the application and are not modified.
+
+Source code for Qt and PySide6: https://code.qt.io/ and https://download.qt.io/
+Full text of the LGPLv3:        https://www.gnu.org/licenses/lgpl-3.0.txt
+
+Qt and the Qt logo are trademarks of The Qt Company Ltd.

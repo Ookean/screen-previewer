@@ -1,5 +1,6 @@
 mss
 pillow
+PySide6-Essentials
 pygetwindow; sys_platform == "win32"
 pywin32; sys_platform == "win32"
 python-xlib; sys_platform == "linux"

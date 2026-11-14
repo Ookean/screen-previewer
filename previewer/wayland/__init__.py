@@ -42,12 +42,12 @@ ZOOM_UNAVAILABLE_REASON = None if ZOOM_AVAILABLE else UNAVAILABLE_REASON or "win
 _keys = ZoomKeys()
 
 
-def enable_dpi_awareness():
-    """Nothing to do on Linux; present so callers need no platform check."""
-
-
-def focus_own_window(root):
+def focus_own_window(handle):
     """Wayland does not let an app take the focus back by itself: nothing to do."""
+
+
+def window_key(window):
+    return window.id
 
 
 def list_windows():

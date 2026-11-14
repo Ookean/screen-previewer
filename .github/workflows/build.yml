@@ -16,7 +16,7 @@ on:
       - '.github/workflows/build.yml'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'   # beta: GitHub prerelease, no Store package
   workflow_dispatch: {}
 
 permissions:
@@ -66,7 +66,7 @@ jobs:
 
       - name: Build executable (onedir)
         run: |
-          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --add-data "Assets/icon.ico;Assets" --add-data "previewer/locales;previewer/locales" --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
+          pyinstaller --onedir --windowed --name screen_preview screen_preview.py --icon=Assets/icon.ico --exclude-module tkinter --add-data "Assets/icon.ico;Assets" --add-data "previewer/locales;previewer/locales" --add-data "THIRD_PARTY_LICENSES.txt;." --add-data "PRIVACY.md;."
 
       - name: Zip portable build
         shell: pwsh
@@ -133,8 +133,10 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install system libraries (build machine only)
-        run: sudo apt-get update && sudo apt-get install -y libtk8.6 libtcl8.6 binutils
+      - name: Install system libraries (build machine only; PyInstaller copies the Qt ones into the app)
+        run: sudo apt-get update && sudo apt-get install -y binutils libegl1 libgl1 libfontconfig1 libdbus-1-3 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
       - name: Install Python dependencies
         run: |
@@ -157,6 +159,7 @@ jobs:
       - name: Build executable (onedir)
         run: |
           pyinstaller --onedir --windowed --name screen_preview screen_preview.py \
+            --exclude-module tkinter \
             --add-data "Assets/icon.ico:Assets" \
             --add-data "previewer/locales:previewer/locales" \
             --add-data "THIRD_PARTY_LICENSES.txt:." \
@@ -218,6 +221,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ needs.build-windows.outputs.prerelease == 'true' }}
+          fail_on_unmatched_files: ${{ needs.build-windows.outputs.prerelease == 'false' }}   # betas have no .msix
           generate_release_notes: true
           files: |
             msix_output/*.msix

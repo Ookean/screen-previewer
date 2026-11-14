@@ -1,11 +1,10 @@
 """About window with the privacy policy and third-party license texts."""
 import os
-import tkinter as tk
 import urllib.parse
 import webbrowser
-from tkinter import font as tkfont
-from tkinter import ttk
-from tkinter.scrolledtext import ScrolledText
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QLabel, QPlainTextEdit, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 from . import i18n
 from .config import APP_NAME, APP_VERSION, PRIVACY_URL, REPO_URL, desktop_info, resource_path
@@ -33,41 +32,46 @@ def privacy_path():
     return translated if os.path.exists(translated) else resource_path("PRIVACY.md")
 
 
-def add_text_tab(tabs, title, path, missing_msg):
-    frame = tk.Frame(tabs)
-    tabs.add(frame, text=title)
-    box = ScrolledText(frame, wrap=tk.WORD, font="TkFixedFont")
-    box.pack(fill=tk.BOTH, expand=True)
+def _text_tab(path, missing_msg):
+    box = QPlainTextEdit()
+    box.setReadOnly(True)
     try:
         with open(path, encoding="utf-8") as f:
-            box.insert("1.0", f.read())
+            box.setPlainText(f.read())
     except OSError:
-        box.insert("1.0", missing_msg)
-    box.configure(state="disabled")
+        box.setPlainText(missing_msg)
+    return box
 
 
 def show_about(parent):
-    win = tk.Toplevel(parent)
-    win.title(t("about.title", app=APP_NAME))
-    win.geometry("640x460")
-    win.transient(parent)
+    dialog = QDialog(parent)
+    dialog.setWindowTitle(t("about.title", app=APP_NAME))
+    dialog.resize(660, 500)
+    layout = QVBoxLayout(dialog)
+    tabs = QTabWidget()
+    layout.addWidget(tabs)
 
-    # Keep a reference: a tkinter Font object deletes its Tk font when garbage collected.
-    win.title_font = tkfont.nametofont("TkDefaultFont").copy()
-    win.title_font.configure(size=16, weight="bold")
-
-    tabs = ttk.Notebook(win)
-    tabs.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
-
-    about = tk.Frame(tabs)
-    tabs.add(about, text=t("about.tab_about"))
-    tk.Label(about, text=APP_NAME, font=win.title_font).pack(pady=(24, 2))
-    tk.Label(about, text=t("about.version", version=APP_VERSION)).pack()
-    tk.Label(about, text=t("about.description")).pack(pady=12)
-    tk.Button(about, text=t("about.report_issue"), command=open_issues).pack(pady=2)
-    tk.Button(about, text=t("about.privacy_online"),
-              command=lambda: webbrowser.open(PRIVACY_URL)).pack(pady=2)
-
-    add_text_tab(tabs, t("about.tab_privacy"), privacy_path(), t("about.privacy_missing"))
-    add_text_tab(tabs, t("about.tab_licenses"), resource_path("THIRD_PARTY_LICENSES.txt"),
-                 t("about.licenses_missing"))
+    page = QWidget()
+    column = QVBoxLayout(page)
+    column.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    column.setSpacing(10)
+    title = QLabel(APP_NAME)
+    title.setStyleSheet("font-size: 20pt; font-weight: 700;")
+    title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    column.addWidget(title)
+    for text, muted in ((t("about.version", version=APP_VERSION), True), (t("about.description"), False)):
+        label = QLabel(text)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setWordWrap(True)
+        if muted:
+            label.setObjectName("muted")
+        column.addWidget(label)
+    for text, action in ((t("about.report_issue"), open_issues),
+                         (t("about.privacy_online"), lambda: webbrowser.open(PRIVACY_URL))):
+        button = QPushButton(text)
+        button.clicked.connect(lambda checked=False, run=action: run())
+        column.addWidget(button)
+    tabs.addTab(page, t("about.tab_about"))
+    tabs.addTab(_text_tab(privacy_path(), t("about.privacy_missing")), t("about.tab_privacy"))
+    tabs.addTab(_text_tab(resource_path("THIRD_PARTY_LICENSES.txt"), t("about.licenses_missing")), t("about.tab_licenses"))
+    dialog.exec()
