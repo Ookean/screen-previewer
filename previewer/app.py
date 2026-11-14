@@ -29,7 +29,7 @@ class ScreenPreviewApp(QMainWindow):
 
         self.monitor_panel = MonitorPanel(self.model)
         self.monitor_panel.changed.connect(self.on_monitor_changed)
-        self.window_panel = WindowPanel(self.model, on_action_done=self.restore_focus)
+        self.window_panel = WindowPanel(self.model, on_action_done=self.restore_focus, exclude=self.is_own_window)
         self.window_panel.message.connect(lambda text: self.statusBar().showMessage(text, 5000))
 
         controls = QWidget()
@@ -90,6 +90,13 @@ class ScreenPreviewApp(QMainWindow):
             return
         self.setWindowTitle(t("app.title_monitor", index=self.model.index,
                               width=monitor["width"], height=monitor["height"]))
+
+    def is_own_window(self, window):
+        """True for this app's own window, so it is not offered in the window list.
+
+        Windows and X11 identify it by its native handle. Wayland gives no handle to compare, so the title is used too.
+        """
+        return window_control.window_key(window) == int(self.winId()) or window.title == self.windowTitle()
 
     def restore_focus(self):
         """Moving or zooming another window activates it; take the focus back so the next click lands here."""

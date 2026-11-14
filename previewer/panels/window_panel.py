@@ -22,11 +22,14 @@ class WindowPanel(QWidget):
     ZOOM_BUTTONS = (("−", "out"), ("+", "in"), ("100%", "reset"))
     REFOCUS_MS = 300            # let the other window receive its keys before we take the focus back
 
-    def __init__(self, model, on_action_done=None):
-        """`on_action_done()` is called shortly after a move or zoom (the app uses it to take the focus back)."""
+    def __init__(self, model, on_action_done=None, exclude=None):
+        """`on_action_done()` is called shortly after a move or zoom (the app uses it to take the focus back).
+        `exclude(window)` returns True for windows that must not be offered (the app's own window).
+        """
         super().__init__()
         self.model = model
         self.on_action_done = on_action_done
+        self.exclude = exclude
         self.windows = []
 
         column = QVBoxLayout(self)
@@ -115,7 +118,7 @@ class WindowPanel(QWidget):
         previous = self.selected_window()
         previous_key = None if previous is None else window_control.window_key(previous)
         try:
-            self.windows = window_control.list_windows()
+            self.windows = [w for w in window_control.list_windows() if not (self.exclude and self.exclude(w))]
             keys = [window_control.window_key(w) for w in self.windows]
             labels = [f"{w.title} ({w.width}x{w.height})" for w in self.windows]
         except Exception as e:
