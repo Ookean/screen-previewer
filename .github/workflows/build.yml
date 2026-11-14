@@ -134,7 +134,9 @@ jobs:
           python-version: '3.13'
 
       - name: Install system libraries (build machine only; PyInstaller copies the Qt ones into the app)
-        run: sudo apt-get update && sudo apt-get install -y binutils libegl1 libgl1 libfontconfig1 libdbus-1-3 libxkbcommon-x11-0 \
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils libegl1 libgl1 libfontconfig1 libdbus-1-3 libxkbcommon-x11-0 \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
             libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
